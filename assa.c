@@ -16,22 +16,70 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define COMMAND_BUFFER_SIZE 1024
+#define BUFFER_SIZE 1024
 #define USER_INPUT_PARAM_LENGTH 128
 
-void wrongParameterCount()
+
+void errorReadingFile()
+{
+  printf("[ERR] reading the file failed\n");
+}
+
+void errorWrongParameterCount()
 {
   printf("[ERR] wrong parameter count\n");
 }
 
+void errorOutOfMemory()
+{
+  printf("[ERR] out of memory\n");
+}
+
+void freeAllTheMemory(char *bf_program)
+{
+  free(bf_program);
+}
+
+void loadBfProgram(char *bf_program,const char **argv)
+{
+  FILE *pFile;
+  pFile = fopen (argv[2], "r");
+  if (pFile == NULL)
+  {
+    // file open error
+    errorReadingFile();
+    freeAllTheMemory(bf_program);
+    exit(4);
+  }
+
+  //parse input and save bf program
+
+
+  //asof right now print test
+  printf("Brainfuck File: %s\n", argv[2]);
+
+  fclose (pFile);
+}
+
 int main(int argc, const char *argv[])
 {
-  char command[COMMAND_BUFFER_SIZE];
+  char command[BUFFER_SIZE];
+  char *bf_program;
   char *command_splits = "default";
   char *user_input_parameter_one = "default";
   char *user_input_parameter_two = "default";
   char *user_input_parameter_three = "default";
+
+  unsigned int memory_size = BUFFER_SIZE;
  
+  // calloc space for BF program
+  bf_program = calloc(memory_size, sizeof(char));
+  if (bf_program == NULL)
+  {
+    errorOutOfMemory();
+    exit(2);
+  }
+
   // ckecks parameter count for program mode
 	if (argc == 1)
 	{
@@ -42,6 +90,21 @@ int main(int argc, const char *argv[])
 	{
     // run .bf program and quit
     printf("Program run mode\n");
+
+    // load bf prog
+    loadBfProgram(bf_program, argv);
+
+    // TODO: run as of now test
+    // for (int i = 0; i < memory_size; ++i)
+    // {
+    //   printf("%c", bf_program[i]);
+    // }
+
+    printf("The program run, now exit.\n");
+
+    //free memory
+    freeAllTheMemory(bf_program);
+    exit(0);
 	}
   else
   {
@@ -54,7 +117,7 @@ int main(int argc, const char *argv[])
   {
     // writes prefix, gets user input and checks for EOF
     printf("esp> ");
-    if (fgets(command, COMMAND_BUFFER_SIZE, stdin) == NULL)
+    if (fgets(command, BUFFER_SIZE, stdin) == NULL)
     {
       printf("\n"); // optional
       break;
@@ -64,7 +127,6 @@ int main(int argc, const char *argv[])
     user_input_parameter_one = "default";
     user_input_parameter_two = "default";
     user_input_parameter_three = "default";
-    command_splits = "default";
 
     // split user input into parameters
     command_splits = strtok(command, " \n");
@@ -90,7 +152,7 @@ int main(int argc, const char *argv[])
     // check whether input was an empty
     if (strcmp(command, "\n") == 0)
     {
-      wrongParameterCount();  
+      errorWrongParameterCount();  
     }
 
     // load command
@@ -99,6 +161,10 @@ int main(int argc, const char *argv[])
     {
       //TODO: failed loading, parsed errors
       printf("Load.\n");
+    }
+    else if (strcmp(user_input_parameter_one, "load") == 0)
+    {
+      errorWrongParameterCount();
     }
 
     // run command
@@ -116,7 +182,7 @@ int main(int argc, const char *argv[])
     }
     else if (strcmp(user_input_parameter_one, "eval") == 0)
     {
-      wrongParameterCount();
+      errorWrongParameterCount();
     }
 
     // break command
@@ -128,7 +194,7 @@ int main(int argc, const char *argv[])
     }
     else if (strcmp(user_input_parameter_one, "break") == 0)
     {
-      wrongParameterCount();
+      errorWrongParameterCount();
     }
     
     // step command
@@ -140,7 +206,7 @@ int main(int argc, const char *argv[])
     }
     else if (strcmp(user_input_parameter_one, "step") == 0)
     {
-      wrongParameterCount();
+      errorWrongParameterCount();
     }
 
     // memory command
@@ -153,7 +219,7 @@ int main(int argc, const char *argv[])
     else if (strcmp(user_input_parameter_one, "memory") == 0 &&
       strcmp(user_input_parameter_three, "default") == 0)
     {
-      wrongParameterCount();
+      errorWrongParameterCount();
     }
 
     // show command
@@ -165,7 +231,7 @@ int main(int argc, const char *argv[])
     }
     else if (strcmp(user_input_parameter_one, "show") == 0)
     {
-      wrongParameterCount();
+      errorWrongParameterCount();
     }
 
     // change command
@@ -178,7 +244,7 @@ int main(int argc, const char *argv[])
     else if (strcmp(user_input_parameter_one, "change") == 0 && 
       strcmp(user_input_parameter_three, "default") == 0)
     {
-      wrongParameterCount();
+      errorWrongParameterCount();
     }
   }
 
@@ -189,6 +255,7 @@ int main(int argc, const char *argv[])
   }
 
 	// TODO: free all the memory!
+  freeAllTheMemory(bf_program);
 
 	return 0;
 }
