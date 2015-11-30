@@ -17,8 +17,6 @@
 #include <string.h>
 
 #define BUFFER_SIZE 1024
-#define USER_INPUT_PARAM_LENGTH 128
-
 
 void errorReadingFile()
 {
@@ -40,25 +38,49 @@ void freeAllTheMemory(char *bf_program)
   free(bf_program);
 }
 
-void loadBfProgram(char *bf_program,const char **argv)
+void loadBfProgram(char *bf_program, const char **argv, 
+  unsigned int *memory_size)
 {
-  FILE *pFile;
-  pFile = fopen (argv[2], "r");
-  if (pFile == NULL)
+  FILE *bf_file_ptr = fopen (argv[2], "r");
+  if (bf_file_ptr == NULL)
   {
     // file open error
     errorReadingFile();
-    freeAllTheMemory(bf_program);
+    free(bf_program);
     exit(4);
   }
 
-  //parse input and save bf program
+  char next_char;
+  char *realoc_ptr;
+  int memory_counter = 0;
 
+  // save bf program
+  while ((next_char = fgetc(bf_file_ptr)) != EOF)
+  {
+    // realloc memory if needed TODO: FIX THIS SHIT
+    if (memory_counter == *memory_size)
+    {
+      *memory_size *= 2;
 
-  //asof right now print test
-  printf("Brainfuck File: %s\n", argv[2]);
+      realoc_ptr = realloc(bf_program, *memory_size);
+      if (realoc_ptr == NULL)
+      {
+        errorOutOfMemory();
+        free(bf_program);
+        exit(4);
+      }
 
-  fclose (pFile);
+      bf_program = realoc_ptr;
+    }
+
+    bf_program[memory_counter++] = next_char;
+  }
+
+  memory_counter--;
+
+  // parse bf prog here
+
+  fclose (bf_file_ptr);
 }
 
 int main(int argc, const char *argv[])
@@ -71,6 +93,8 @@ int main(int argc, const char *argv[])
   char *user_input_parameter_three = "default";
 
   unsigned int memory_size = BUFFER_SIZE;
+  unsigned int print_counter;
+
  
   // calloc space for BF program
   bf_program = calloc(memory_size, sizeof(char));
@@ -80,30 +104,30 @@ int main(int argc, const char *argv[])
     exit(2);
   }
 
-  // ckecks parameter count for program mode
+  // ckecks parameter count for program mode 
 	if (argc == 1)
 	{
-    // interactive debug mode
+    // interactive debug mode -------------------------------------------------
 		printf("Interaktive debug mode\n");	
 	}
 	else if (argc == 3)
 	{
-    // run .bf program and quit
+    // run .bf program and quit -----------------------------------------------
     printf("Program run mode\n");
 
     // load bf prog
-    loadBfProgram(bf_program, argv);
+    loadBfProgram(bf_program, argv, &memory_size);
 
     // TODO: run as of now test
-    // for (int i = 0; i < memory_size; ++i)
-    // {
-    //   printf("%c", bf_program[i]);
-    // }
 
-    printf("The program run, now exit.\n");
+    for (print_counter = 0; bf_program[print_counter] != '\0'; ++print_counter)
+    {
+      printf("%c", bf_program[print_counter]);
+    }
+    printf("\n");
 
     //free memory
-    freeAllTheMemory(bf_program);
+    free(bf_program);
     exit(0);
 	}
   else
@@ -255,7 +279,7 @@ int main(int argc, const char *argv[])
   }
 
 	// TODO: free all the memory!
-  freeAllTheMemory(bf_program);
+  free(bf_program);
 
 	return 0;
 }
