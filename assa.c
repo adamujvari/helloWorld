@@ -28,99 +28,121 @@ void errorWrongParameterCount()
   printf("[ERR] wrong parameter count\n");
 }
 
+void errorNoFileLoaded()
+{
+  printf("[ERR] no program loaded\n");
+}
+
 void errorOutOfMemory()
 {
   printf("[ERR] out of memory\n");
 }
 
-// not used TODO: remove if not used
-void freeAllTheMemory()
-{
-}
-
-void loadBfProgram(char **bf_program, const char **argv, 
+int loadBfProgram(char **bf_program, char *bf_prog_name, 
   unsigned int *memory_size)
 {
-  FILE *bf_file_ptr = fopen (argv[2], "r");
+  FILE *bf_file_ptr = fopen(bf_prog_name, "r");
   if (bf_file_ptr == NULL)
   {
     // file open error
-    errorReadingFile();
-    free(*bf_program);
-    exit(4);
+    return 1;
   }
-
-  char next_char;
-  char *realoc_ptr;
-  int memory_counter = 0;
-
-  // save bf program
-  while ((next_char = fgetc(bf_file_ptr)) != EOF)
+  else
   {
-    // realloc memory if needed
-    if (memory_counter == *memory_size)
-    {
-      *memory_size *= 2;
+    char next_char;
+    char *realoc_ptr;
+    int memory_counter = 0;
 
-      realoc_ptr = realloc(*bf_program, *memory_size);
-      if (realoc_ptr == NULL)
+    // save bf program
+    while ((next_char = fgetc(bf_file_ptr)) != EOF)
+    {
+      // realloc memory if needed
+      if (memory_counter == *memory_size)
       {
-        errorOutOfMemory();
-        free(*bf_program);
-        exit(4);
+        *memory_size *= 2;
+
+        realoc_ptr = realloc(*bf_program, *memory_size);
+        if (realoc_ptr == NULL)
+        {
+          errorOutOfMemory();
+          free(*bf_program);
+          exit(4);
+        }
+
+        *bf_program = realoc_ptr;
       }
 
-      *bf_program = realoc_ptr;
+      (*bf_program)[memory_counter++] = next_char;
     }
 
-    (*bf_program)[memory_counter++] = next_char;
+    fclose (bf_file_ptr);
+    return 0;
   }
+}
 
-  fclose (bf_file_ptr);
+void resetBfProgramData(char **bf_program)
+{
+  // calloc default memory for bf prog data
+  *bf_program = calloc(BUFFER_SIZE, sizeof(char));
+  if (*bf_program == NULL)
+  {
+    errorOutOfMemory();
+    exit(2);
+  }
+}
+
+// temp function for printing array
+void printBfProg(char *bf_program)
+{
+  unsigned int print_counter;
+
+  for (print_counter = 0; bf_program[print_counter] != '\0'; ++print_counter)
+  {
+    printf("%c", bf_program[print_counter]);
+  }
+  printf("\n");
 }
 
 int main(int argc, const char *argv[])
 {
   char command[BUFFER_SIZE];
-  char *bf_program;
+  char *bf_program = NULL;
   char *command_splits = "default";
   char *user_input_parameter_one = "default";
   char *user_input_parameter_two = "default";
   char *user_input_parameter_three = "default";
 
   unsigned int memory_size = BUFFER_SIZE;
-  unsigned int print_counter;
 
- 
-  // calloc space for BF program
-  bf_program = calloc(memory_size, sizeof(char));
-  if (bf_program == NULL)
-  {
-    errorOutOfMemory();
-    exit(2);
-  }
+  int function_error = 0;
 
   // ckecks parameter count for program mode 
 	if (argc == 1)
 	{
     // interactive debug mode -------------------------------------------------
-		printf("Interaktive debug mode\n");	
 	}
 	else if (argc == 3)
 	{
     // run .bf program and quit -----------------------------------------------
-    printf("Program run mode\n");
+
+    // calloc space for BF program
+    resetBfProgramData(&bf_program);
 
     // load bf prog
-    loadBfProgram(&bf_program, argv, &memory_size);
+    char bf_file_name[128];
+    strcpy(bf_file_name, argv[2]);
 
-    // TODO: run as of now test
-
-    for (print_counter = 0; bf_program[print_counter] != '\0'; ++print_counter)
+    function_error = loadBfProgram(&bf_program, bf_file_name, &memory_size);
+    if(function_error == 1)
     {
-      printf("%c", bf_program[print_counter]);
+      // error in readin file
+      errorReadingFile();
+      free(bf_program);
+      exit(4);
     }
-    printf("\n");
+
+    // TODO: print bf prog as of now test
+    printBfProg(bf_program);
 
     //free memory
     free(bf_program);
@@ -179,8 +201,21 @@ int main(int argc, const char *argv[])
     if (strcmp(user_input_parameter_one, "load") == 0 
       && strcmp(user_input_parameter_two, "default") != 0)
     {
-      //TODO: failed loading, parsed errors
-      printf("Load.\n");
+      // reset memory
+      resetBfProgramData(&bf_program);
+
+      // load program
+      function_error = loadBfProgram(&bf_program, user_input_parameter_two, 
+        &memory_size);
+      if (function_error == 1)
+      {
+        errorReadingFile();
+        bf_program = NULL;
+      }
+      else
+      {
+        // parse bf program
+      }
     }
     else if (strcmp(user_input_parameter_one, "load") == 0)
     {
@@ -191,7 +226,16 @@ int main(int argc, const char *argv[])
     if (strcmp(user_input_parameter_one, "run") == 0)
     {
       //TODO: if no program loaded error
-      printf("[ERR] no program loaded\n");
+      if(bf_program == NULL)
+      {
+        // no prog loaded error
+        errorNoFileLoaded();
+      }
+      else
+      {
+        // run bf prog // print as of now
+        printBfProg(bf_program);
+      }
     }
 
     // eval command
@@ -209,8 +253,16 @@ int main(int argc, const char *argv[])
     if (strcmp(user_input_parameter_one, "break") == 0 
       && strcmp(user_input_parameter_two, "default") != 0)
     {
-      //TODO: if no program loaded error
-      printf("Break.\n");
+      // check if no program loaded error
+      if(bf_program == NULL)
+      {
+        // no prog loaded error
+        errorNoFileLoaded();
+      }
+      else
+      {
+        printf("Break.\n");
+      }
     }
     else if (strcmp(user_input_parameter_one, "break") == 0)
     {
@@ -221,8 +273,16 @@ int main(int argc, const char *argv[])
     if (strcmp(user_input_parameter_one, "step") == 0 
       && strcmp(user_input_parameter_two, "default") != 0)
     {
-      //TODO: if no program loaded error
-      printf("Step.\n");
+      // check if no program loaded error
+      if(bf_program == NULL)
+      {
+        // no prog loaded error
+        errorNoFileLoaded();
+      }
+      else
+      {
+        printf("Step.\n");
+      }
     }
     else if (strcmp(user_input_parameter_one, "step") == 0)
     {
@@ -233,8 +293,16 @@ int main(int argc, const char *argv[])
     if (strcmp(user_input_parameter_one, "memory") == 0 
       && strcmp(user_input_parameter_three, "default") != 0)
     {
-      //TODO: if no program loaded error
-      printf("Memory.\n");
+      // check if no program loaded error
+      if(bf_program == NULL)
+      {
+        // no prog loaded error
+        errorNoFileLoaded();
+      }
+      else
+      {
+        printf("Memory.\n");
+      }
     }
     else if (strcmp(user_input_parameter_one, "memory") == 0 &&
       strcmp(user_input_parameter_three, "default") == 0)
@@ -246,8 +314,16 @@ int main(int argc, const char *argv[])
     if (strcmp(user_input_parameter_one, "show") == 0 
       && strcmp(user_input_parameter_two, "default") != 0)
     {
-      //TODO: if no program loaded error
-      printf("Show.\n");
+      // check if no program loaded error
+      if(bf_program == NULL)
+      {
+        // no prog loaded error
+        errorNoFileLoaded();
+      }
+      else
+      {
+        printf("Show.\n");
+      }
     }
     else if (strcmp(user_input_parameter_one, "show") == 0)
     {
@@ -258,8 +334,16 @@ int main(int argc, const char *argv[])
     if (strcmp(user_input_parameter_one, "change") == 0
       && strcmp(user_input_parameter_three, "default") != 0)
     {
-      //TODO: if no program loaded error
-      printf("Change.\n");
+      // check if no program loaded error
+      if(bf_program == NULL)
+      {
+        // no prog loaded error
+        errorNoFileLoaded();
+      }
+      else
+      {
+        printf("Change.\n");
+      }
     }
     else if (strcmp(user_input_parameter_one, "change") == 0 && 
       strcmp(user_input_parameter_three, "default") == 0)
