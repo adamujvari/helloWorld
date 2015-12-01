@@ -43,7 +43,12 @@ void errorOutOfMemory()
   printf("[ERR] out of memory\n");
 }
 
-int loadBfProgram(char **bf_program, char *bf_prog_name, 
+void errorParsingFailed()
+{
+  printf("[ERR] parsing of input failed \n");
+}
+
+int loadBfProgram(char **bf_program, char *bf_prog_name,
   unsigned int *memory_size)
 {
   FILE *bf_file_ptr = fopen(bf_prog_name, "r");
@@ -55,8 +60,9 @@ int loadBfProgram(char **bf_program, char *bf_prog_name,
   else
   {
     char next_char;
-    char *realoc_ptr;
+    char *realloc_ptr;
     int memory_counter = 0;
+    int bracket_counter = 0;
 
     // save bf program
     while ((next_char = fgetc(bf_file_ptr)) != EOF)
@@ -66,19 +72,32 @@ int loadBfProgram(char **bf_program, char *bf_prog_name,
       {
         *memory_size *= 2;
 
-        realoc_ptr = realloc(*bf_program, *memory_size);
-        if (realoc_ptr == NULL)
+        realloc_ptr = realloc(*bf_program, *memory_size);
+        if (realloc_ptr == NULL)
         {
           errorOutOfMemory();
           free(*bf_program);
           exit(4);
         }
 
-        *bf_program = realoc_ptr;
+        *bf_program = realloc_ptr;
       }
 
-      (*bf_program)[memory_counter++] = next_char;
+      if (next_char == '<' || next_char == '>' ||
+              next_char == '+' || next_char == '-' ||
+              next_char == '.' || next_char == ',' ||
+              next_char == '[' || next_char == ']')
+        (*bf_program)[memory_counter++] = next_char;
+
+
+      if (next_char == '[')
+        bracket_counter++;
+      else if (next_char == ']')
+        bracket_counter--;
     }
+
+    if (bracket_counter != 0)
+      errorParsingFailed();
 
     fclose (bf_file_ptr);
     return 0;
@@ -122,7 +141,7 @@ int main(int argc, const char *argv[])
 
   int function_error = 0;
 
-  // ckecks parameter count for program mode 
+  // ckecks parameter count for program mode
 	if (argc == 1)
 	{
     // interactive debug mode -------------------------------------------------
@@ -166,7 +185,7 @@ int main(int argc, const char *argv[])
     exit(1);
   }
 
-  // this block handles user input parameters 
+  // this block handles user input parameters
   while (strcmp(command, "quit") != 0)
   {
     // writes prefix, gets user input and checks for EOF
@@ -206,18 +225,18 @@ int main(int argc, const char *argv[])
     // check whether input was empty
     if (strcmp(command, "\n") == 0)
     {
-      errorWrongParameterCount();  
+      errorWrongParameterCount();
     }
 
     // load command
-    if (strcmp(user_input_parameter_one, "load") == 0 
+    if (strcmp(user_input_parameter_one, "load") == 0
       && strcmp(user_input_parameter_two, "default") != 0)
     {
       // reset memory
       resetBfProgramData(&bf_program);
 
       // load program
-      function_error = loadBfProgram(&bf_program, user_input_parameter_two, 
+      function_error = loadBfProgram(&bf_program, user_input_parameter_two,
         &memory_size);
       if (function_error == 1)
       {
@@ -255,7 +274,7 @@ int main(int argc, const char *argv[])
     }
 
     // eval command
-    if (strcmp(user_input_parameter_one, "eval") == 0 
+    if (strcmp(user_input_parameter_one, "eval") == 0
       && strcmp(user_input_parameter_two, "default") != 0)
     {
       printf("eval.\n");
@@ -266,7 +285,7 @@ int main(int argc, const char *argv[])
     }
 
     // break command
-    if (strcmp(user_input_parameter_one, "break") == 0 
+    if (strcmp(user_input_parameter_one, "break") == 0
       && strcmp(user_input_parameter_two, "default") != 0)
     {
       // check if no program loaded error
@@ -284,9 +303,9 @@ int main(int argc, const char *argv[])
     {
       errorWrongParameterCount();
     }
-    
+
     // step command
-    if (strcmp(user_input_parameter_one, "step") == 0 
+    if (strcmp(user_input_parameter_one, "step") == 0
       && strcmp(user_input_parameter_two, "default") != 0)
     {
       // check if no program loaded error
@@ -306,7 +325,7 @@ int main(int argc, const char *argv[])
     }
 
     // memory command
-    if (strcmp(user_input_parameter_one, "memory") == 0 
+    if (strcmp(user_input_parameter_one, "memory") == 0
       && strcmp(user_input_parameter_three, "default") != 0)
     {
       // check if no program loaded error
@@ -327,7 +346,7 @@ int main(int argc, const char *argv[])
     }
 
     // show command
-    if (strcmp(user_input_parameter_one, "show") == 0 
+    if (strcmp(user_input_parameter_one, "show") == 0
       && strcmp(user_input_parameter_two, "default") != 0)
     {
       // check if no program loaded error
@@ -361,7 +380,7 @@ int main(int argc, const char *argv[])
         printf("Change.\n");
       }
     }
-    else if (strcmp(user_input_parameter_one, "change") == 0 && 
+    else if (strcmp(user_input_parameter_one, "change") == 0 &&
       strcmp(user_input_parameter_three, "default") == 0)
     {
       errorWrongParameterCount();
