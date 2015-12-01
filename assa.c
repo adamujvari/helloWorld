@@ -18,6 +18,11 @@
 
 #define BUFFER_SIZE 1024
 
+void errorWrongUsage()
+{
+  printf("[ERR] usage: ./assa [-e brainfuck_filnename]\n");
+}
+
 void errorReadingFile()
 {
   printf("[ERR] reading the file failed\n");
@@ -106,6 +111,7 @@ void printBfProg(char *bf_program)
 int main(int argc, const char *argv[])
 {
   char command[BUFFER_SIZE];
+  char bf_file_name[128];
   char *bf_program = NULL;
   char *command_splits = "default";
   char *user_input_parameter_one = "default";
@@ -125,11 +131,17 @@ int main(int argc, const char *argv[])
 	{
     // run .bf program and quit -----------------------------------------------
 
+    // check flag
+    if (strcmp(argv[1], "-e") != 0)
+    {
+      errorWrongUsage();
+      exit(1);
+    }
+
     // calloc space for BF program
     resetBfProgramData(&bf_program);
 
     // load bf prog
-    char bf_file_name[128];
     strcpy(bf_file_name, argv[2]);
 
     function_error = loadBfProgram(&bf_program, bf_file_name, &memory_size);
@@ -150,7 +162,7 @@ int main(int argc, const char *argv[])
 	}
   else
   {
-    printf("[ERR] usage: ./assa [-e brainfuck_filnename]\n");
+    errorWrongUsage();
     exit(1);
   }
 
