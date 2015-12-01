@@ -191,7 +191,7 @@ int main(int argc, const char *argv[])
     // printf("%s\n", user_input_parameter_two);
     // printf("%s\n", user_input_parameter_three);
 
-    // check whether input was an empty
+    // check whether input was empty
     if (strcmp(command, "\n") == 0)
     {
       errorWrongParameterCount();  
@@ -210,7 +210,11 @@ int main(int argc, const char *argv[])
       if (function_error == 1)
       {
         errorReadingFile();
+        free(bf_program);
+
+        // reset values
         bf_program = NULL;
+        function_error = 0;
       }
       else
       {
