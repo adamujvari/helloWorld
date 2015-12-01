@@ -55,6 +55,7 @@ int loadBfProgram(char **bf_program, char *bf_prog_name,
   if (bf_file_ptr == NULL)
   {
     // file open error
+    errorReadingFile();
     return 1;
   }
   else
@@ -77,30 +78,41 @@ int loadBfProgram(char **bf_program, char *bf_prog_name,
         {
           errorOutOfMemory();
           free(*bf_program);
+          fclose (bf_file_ptr);
           exit(4);
         }
 
         *bf_program = realloc_ptr;
       }
 
-      if (next_char == '<' || next_char == '>' ||
-              next_char == '+' || next_char == '-' ||
-              next_char == '.' || next_char == ',' ||
-              next_char == '[' || next_char == ']')
+      if (next_char == '<' || next_char == '>' || next_char == '+' || 
+        next_char == '-' || next_char == '.' || next_char == ',' || 
+          next_char == '[' || next_char == ']')
+      {
         (*bf_program)[memory_counter++] = next_char;
-
+      }
 
       if (next_char == '[')
+      {
         bracket_counter++;
+      }
       else if (next_char == ']')
+      {
         bracket_counter--;
+      }
     }
 
     if (bracket_counter != 0)
+    {
       errorParsingFailed();
-
-    fclose (bf_file_ptr);
-    return 0;
+      fclose (bf_file_ptr);
+      return 1;
+    }
+    else
+    {
+      fclose (bf_file_ptr);
+      return 0;
+    }    
   }
 }
 
@@ -167,7 +179,6 @@ int main(int argc, const char *argv[])
     if(function_error == 1)
     {
       // error in readin file
-      errorReadingFile();
       free(bf_program);
       exit(4);
     }
@@ -240,7 +251,6 @@ int main(int argc, const char *argv[])
         &memory_size);
       if (function_error == 1)
       {
-        errorReadingFile();
         free(bf_program);
 
         // reset values
