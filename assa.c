@@ -33,12 +33,12 @@ void errorOutOfMemory()
   printf("[ERR] out of memory\n");
 }
 
-void freeAllTheMemory(char *bf_program)
+// not used TODO: remove if not used
+void freeAllTheMemory()
 {
-  free(bf_program);
 }
 
-void loadBfProgram(char *bf_program, const char **argv, 
+void loadBfProgram(char **bf_program, const char **argv, 
   unsigned int *memory_size)
 {
   FILE *bf_file_ptr = fopen (argv[2], "r");
@@ -46,7 +46,7 @@ void loadBfProgram(char *bf_program, const char **argv,
   {
     // file open error
     errorReadingFile();
-    free(bf_program);
+    free(*bf_program);
     exit(4);
   }
 
@@ -57,28 +57,24 @@ void loadBfProgram(char *bf_program, const char **argv,
   // save bf program
   while ((next_char = fgetc(bf_file_ptr)) != EOF)
   {
-    // realloc memory if needed TODO: FIX THIS SHIT
+    // realloc memory if needed
     if (memory_counter == *memory_size)
     {
       *memory_size *= 2;
 
-      realoc_ptr = realloc(bf_program, *memory_size);
+      realoc_ptr = realloc(*bf_program, *memory_size);
       if (realoc_ptr == NULL)
       {
         errorOutOfMemory();
-        free(bf_program);
+        free(*bf_program);
         exit(4);
       }
 
-      bf_program = realoc_ptr;
+      *bf_program = realoc_ptr;
     }
 
-    bf_program[memory_counter++] = next_char;
+    (*bf_program)[memory_counter++] = next_char;
   }
-
-  memory_counter--;
-
-  // parse bf prog here
 
   fclose (bf_file_ptr);
 }
@@ -116,7 +112,7 @@ int main(int argc, const char *argv[])
     printf("Program run mode\n");
 
     // load bf prog
-    loadBfProgram(bf_program, argv, &memory_size);
+    loadBfProgram(&bf_program, argv, &memory_size);
 
     // TODO: run as of now test
 
