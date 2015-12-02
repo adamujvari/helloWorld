@@ -152,6 +152,8 @@ int main(int argc, const char *argv[])
   unsigned int memory_size = BUFFER_SIZE;
 
   int function_error = 0;
+  int already_run = 0;
+
 
   // ckecks parameter count for program mode
 	if (argc == 1)
@@ -246,7 +248,7 @@ int main(int argc, const char *argv[])
       // reset memory
       resetBfProgramData(&bf_program);
 
-      // load program
+      // load program and parse
       function_error = loadBfProgram(&bf_program, user_input_parameter_two,
         &memory_size);
       if (function_error == 1)
@@ -256,10 +258,11 @@ int main(int argc, const char *argv[])
         // reset values
         bf_program = NULL;
         function_error = 0;
+        already_run = 0;
       }
       else
       {
-        // parse bf program
+        already_run = 0;
       }
     }
     else if (strcmp(user_input_parameter_one, "load") == 0)
@@ -271,7 +274,7 @@ int main(int argc, const char *argv[])
     if (strcmp(user_input_parameter_one, "run") == 0)
     {
       //TODO: if no program loaded error
-      if(bf_program == NULL)
+      if(bf_program == NULL || already_run == 1)
       {
         // no prog loaded error
         errorNoFileLoaded();
@@ -280,6 +283,7 @@ int main(int argc, const char *argv[])
       {
         // run bf prog // print as of now
         printBfProg(bf_program);
+        already_run = 1;
       }
     }
 
