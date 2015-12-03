@@ -102,6 +102,7 @@ int loadBfProgram(char **bf_program, char *bf_prog_name,
       }
     }
 
+    // count correct number of bf loops
     if (bracket_counter != 0)
     {
       errorParsingFailed();
@@ -127,7 +128,7 @@ void resetBfProgramData(char **bf_program)
   }
 }
 
-// temp function for printing array
+// TODO: temporary function for printing array, remove if not needed
 void printBfProg(char *bf_program)
 {
   unsigned int print_counter;
@@ -150,7 +151,9 @@ int main(int argc, const char *argv[])
   char *user_input_parameter_three = "default";
 
   unsigned int memory_size = BUFFER_SIZE;
+  unsigned int show_size_counter;
 
+  int print_counter = 0;
   int function_error = 0;
   int already_run = 0;
 
@@ -184,8 +187,10 @@ int main(int argc, const char *argv[])
       free(bf_program);
       exit(4);
     }
+    // set head pointer
 
-    // TODO: print bf prog as of now test
+
+    // TODO: run bf prog
     printBfProg(bf_program);
 
     //free memory
@@ -289,7 +294,7 @@ int main(int argc, const char *argv[])
 
     // eval command
     if (strcmp(user_input_parameter_one, "eval") == 0
-      && strcmp(user_input_parameter_two, "default") != 0)
+      && strcmp(user_input_parameter_two, "default") != 0) // -----------------
     {
       printf("eval.\n");
     }
@@ -300,7 +305,7 @@ int main(int argc, const char *argv[])
 
     // break command
     if (strcmp(user_input_parameter_one, "break") == 0
-      && strcmp(user_input_parameter_two, "default") != 0)
+      && strcmp(user_input_parameter_two, "default") != 0) // -----------------
     {
       // check if no program loaded error
       if(bf_program == NULL)
@@ -320,7 +325,7 @@ int main(int argc, const char *argv[])
 
     // step command
     if (strcmp(user_input_parameter_one, "step") == 0
-      && strcmp(user_input_parameter_two, "default") != 0)
+      && strcmp(user_input_parameter_two, "default") != 0) // -----------------
     {
       // check if no program loaded error
       if(bf_program == NULL)
@@ -340,7 +345,7 @@ int main(int argc, const char *argv[])
 
     // memory command
     if (strcmp(user_input_parameter_one, "memory") == 0
-      && strcmp(user_input_parameter_three, "default") != 0)
+      && strcmp(user_input_parameter_three, "default") != 0) // ---------------
     {
       // check if no program loaded error
       if(bf_program == NULL)
@@ -360,8 +365,7 @@ int main(int argc, const char *argv[])
     }
 
     // show command
-    if (strcmp(user_input_parameter_one, "show") == 0
-      && strcmp(user_input_parameter_two, "default") != 0)
+    if (strcmp(user_input_parameter_one, "show") == 0) // ---------------------
     {
       // check if no program loaded error
       if(bf_program == NULL)
@@ -371,17 +375,28 @@ int main(int argc, const char *argv[])
       }
       else
       {
-        printf("Show.\n");
+        // set default size
+        show_size_counter = 10;
+        // set to size if entered
+        if (strcmp(user_input_parameter_two, "default") != 0)
+        {
+          show_size_counter = atoi(user_input_parameter_two);
+        }
+
+        // TODO: jump to ptr head
+        for (print_counter = 0; print_counter < show_size_counter && 
+          bf_program[print_counter] != '\0'; ++print_counter)
+        {
+          printf("%c", bf_program[print_counter]);
+        }
+
+        printf("\n");
       }
-    }
-    else if (strcmp(user_input_parameter_one, "show") == 0)
-    {
-      errorWrongParameterCount();
     }
 
     // change command
     if (strcmp(user_input_parameter_one, "change") == 0
-      && strcmp(user_input_parameter_three, "default") != 0)
+      && strcmp(user_input_parameter_three, "default") != 0) // ---------------
     {
       // check if no program loaded error
       if(bf_program == NULL)
@@ -395,7 +410,7 @@ int main(int argc, const char *argv[])
       }
     }
     else if (strcmp(user_input_parameter_one, "change") == 0 &&
-      strcmp(user_input_parameter_three, "default") == 0)
+      strcmp(user_input_parameter_three, "default") == 0) // ------------------
     {
       errorWrongParameterCount();
     }
