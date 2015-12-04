@@ -18,35 +18,14 @@
 
 #define BUFFER_SIZE 1024
 
-void errorWrongUsage()
-{
-  printf("[ERR] usage: ./assa [-e brainfuck_filnename]\n");
-}
+#define errorWrongUsage "[ERR] usage: ./assa [-e brainfuck_filnename]\n"
+#define errorReadingFile "[ERR] reading the file failed\n"
+#define errorWrongParameterCount "[ERR] wrong parameter count\n"
+#define errorNoFileLoaded "[ERR] no program loaded\n"
+#define errorOutOfMemory "[ERR] out of memory\n"
+#define errorParsingFailed "[ERR] parsing of input failed \n"
 
-void errorReadingFile()
-{
-  printf("[ERR] reading the file failed\n");
-}
 
-void errorWrongParameterCount()
-{
-  printf("[ERR] wrong parameter count\n");
-}
-
-void errorNoFileLoaded()
-{
-  printf("[ERR] no program loaded\n");
-}
-
-void errorOutOfMemory()
-{
-  printf("[ERR] out of memory\n");
-}
-
-void errorParsingFailed()
-{
-  printf("[ERR] parsing of input failed \n");
-}
 
 int loadBfProgram(char **bf_program, char *bf_prog_name,
   unsigned int *memory_size)
@@ -55,7 +34,7 @@ int loadBfProgram(char **bf_program, char *bf_prog_name,
   if (bf_file_ptr == NULL)
   {
     // file open error
-    errorReadingFile();
+    printf(errorReadingFile);
     return 1;
   }
   else
@@ -76,7 +55,7 @@ int loadBfProgram(char **bf_program, char *bf_prog_name,
         realloc_ptr = realloc(*bf_program, *memory_size);
         if (realloc_ptr == NULL)
         {
-          errorOutOfMemory();
+          printf(errorOutOfMemory);
           free(*bf_program);
           fclose (bf_file_ptr);
           exit(4);
@@ -105,7 +84,7 @@ int loadBfProgram(char **bf_program, char *bf_prog_name,
     // count correct number of bf loops
     if (bracket_counter != 0)
     {
-      errorParsingFailed();
+      printf(errorParsingFailed);
       fclose (bf_file_ptr);
       return 1;
     }
@@ -123,7 +102,7 @@ void resetBfProgramData(char **bf_program)
   *bf_program = calloc(BUFFER_SIZE, sizeof(char));
   if (*bf_program == NULL)
   {
-    errorOutOfMemory();
+    printf(errorOutOfMemory);
     exit(2);
   }
 }
@@ -172,7 +151,7 @@ int main(int argc, const char *argv[])
     // check flag
     if (strcmp(argv[1], "-e") != 0)
     {
-      errorWrongUsage();
+      printf(errorWrongUsage);
       exit(1);
     }
 
@@ -201,7 +180,7 @@ int main(int argc, const char *argv[])
 	}
   else
   {
-    errorWrongUsage();
+    printf(errorWrongUsage);
     exit(1);
   }
 
@@ -245,7 +224,7 @@ int main(int argc, const char *argv[])
     // check whether input was empty
     if (strcmp(command, "\n") == 0)
     {
-      errorWrongParameterCount();
+      printf(errorWrongParameterCount);
     }
 
     // load command
@@ -274,7 +253,7 @@ int main(int argc, const char *argv[])
     }
     else if (strcmp(user_input_parameter_one, "load") == 0)
     {
-      errorWrongParameterCount();
+      printf(errorWrongParameterCount);
     }
 
     // run command
@@ -284,7 +263,7 @@ int main(int argc, const char *argv[])
       if(bf_program == NULL || already_run == 1)
       {
         // no prog loaded error
-        errorNoFileLoaded();
+        printf(errorNoFileLoaded);
       }
       else
       {
@@ -302,7 +281,7 @@ int main(int argc, const char *argv[])
     }
     else if (strcmp(user_input_parameter_one, "eval") == 0)
     {
-      errorWrongParameterCount();
+      printf(errorWrongParameterCount);
     }
 
     // break command
@@ -313,7 +292,7 @@ int main(int argc, const char *argv[])
       if(bf_program == NULL)
       {
         // no prog loaded error
-        errorNoFileLoaded();
+        printf(errorNoFileLoaded);
       }
       else
       {
@@ -322,7 +301,7 @@ int main(int argc, const char *argv[])
     }
     else if (strcmp(user_input_parameter_one, "break") == 0)
     {
-      errorWrongParameterCount();
+      printf(errorWrongParameterCount);
     }
 
     // step command
@@ -332,7 +311,7 @@ int main(int argc, const char *argv[])
       if(bf_program == NULL)
       {
         // no prog loaded error
-        errorNoFileLoaded();
+        printf(errorNoFileLoaded);
       }
       else
       {
@@ -357,7 +336,7 @@ int main(int argc, const char *argv[])
       if(bf_program == NULL)
       {
         // no prog loaded error
-        errorNoFileLoaded();
+        printf(errorNoFileLoaded);
       }
       else
       {
@@ -387,7 +366,7 @@ int main(int argc, const char *argv[])
       if(bf_program == NULL)
       {
         // no prog loaded error
-        errorNoFileLoaded();
+        printf(errorNoFileLoaded);
       }
       else
       {
@@ -418,7 +397,7 @@ int main(int argc, const char *argv[])
       if(bf_program == NULL)
       {
         // no prog loaded error
-        errorNoFileLoaded();
+        printf(errorNoFileLoaded);
       }
       else
       {
@@ -428,7 +407,7 @@ int main(int argc, const char *argv[])
     else if (strcmp(user_input_parameter_one, "change") == 0 &&
       strcmp(user_input_parameter_three, "default") == 0) // ------------------
     {
-      errorWrongParameterCount();
+      printf(errorWrongParameterCount);
     }
   }
 
