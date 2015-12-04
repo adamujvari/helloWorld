@@ -43,7 +43,7 @@ Node* create_list(int num_of_elements)
 
   for( counter = 0; counter <= num_of_elements; counter++)
   {
-    Node* new = malloc(sizeof(Node*));
+    Node* new = malloc(sizeof(Node));
     new->character = 0;
     new->next = NULL;
     new->begin = NULL;
@@ -59,12 +59,24 @@ Node* create_list(int num_of_elements)
 void load_list(Node* list, char *bf_program, unsigned int memory_size)
 {
   int counter;
+  int bracket_counter = 0;
+  Node* brackets[memory_size/2]; // maximal die hälfte des programs sind "["
+
   for (counter = 0; counter <= memory_size; counter++)
   {
     list->character = bf_program[counter];
+    if(bf_program[counter] == '[')
+    {
+      brackets[bracket_counter++] = list; // speichern "[" in Array zum loopen
+    }
+    else if (bf_program[counter] == ']')
+    {
+      list->begin = brackets[--bracket_counter]; // zeigt auf
+      list->begin->end = list;
+    }
+
     list = list->next;
   }
-
 }
 
 
@@ -187,11 +199,11 @@ int main(int argc, const char *argv[])
   // ckecks parameter count for program mode
 	if (argc == 1)
 	{
-    // interactive debug mode -------------------------------------------------
+    // interactive debug mode ------------------------------------------------
 	}
 	else if (argc == 3)
 	{
-        // run .bf program and quit -----------------------------------------------
+        // run .bf program and quit ------------------------------------------
 
         // copy flag to compare
         //strcpy(program_flag_argument, argv[1]);
