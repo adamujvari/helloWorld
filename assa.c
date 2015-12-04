@@ -25,6 +25,47 @@
 #define errorOutOfMemory "[ERR] out of memory\n"
 #define errorParsingFailed "[ERR] parsing of input failed\n"
 
+typedef struct _Node_
+{
+    char character;
+    struct _Node_* next;
+    struct _Node_* begin;
+    struct _Node_* end;
+} Node;
+
+// creating list for brainfuck instructions
+
+Node* create_list(int num_of_elements)
+{
+  int counter;
+  Node *head = malloc(sizeof(Node));
+  Node *current_pos = head;
+
+  for( counter = 0; counter <= num_of_elements; counter++)
+  {
+    Node* new = malloc(sizeof(Node*));
+    new->character = 0;
+    new->next = NULL;
+    new->begin = NULL;
+    new->end = NULL;
+
+    current_pos->next = new;
+    current_pos = new;
+  }
+  return head;
+}
+
+
+void load_list(Node* list, char *bf_program, unsigned int memory_size)
+{
+  int counter;
+  for (counter = 0; counter <= memory_size; counter++)
+  {
+    list->character = bf_program[counter];
+    list = list->next;
+  }
+
+}
 
 
 int loadBfProgram(char **bf_program, char *bf_prog_name,
@@ -119,6 +160,11 @@ void printBfProg(char *bf_program)
   printf("\n");
 }
 
+void interpret()
+{
+
+}
+
 int main(int argc, const char *argv[])
 {
   char command[BUFFER_SIZE] = "default";
@@ -145,39 +191,42 @@ int main(int argc, const char *argv[])
 	}
 	else if (argc == 3)
 	{
-    // run .bf program and quit -----------------------------------------------
+        // run .bf program and quit -----------------------------------------------
 
-    // copy flag to compare
-    //strcpy(program_flag_argument, argv[1]);
-    // check flag
-    if (strcmp(argv[1], "-e") != 0)
-    {
-      printf(errorWrongUsage);
-      exit(1);
-    }
+        // copy flag to compare
+        //strcpy(program_flag_argument, argv[1]);
+        // check flag
+        if (strcmp(argv[1], "-e") != 0)
+        {
+          printf(errorWrongUsage);
+          exit(1);
+        }
 
-    // calloc space for BF program
-    resetBfProgramData(&bf_program);
+        // calloc space for BF program
+        resetBfProgramData(&bf_program);
 
-    // load bf prog
-    strcpy(bf_file_name, argv[2]);
+        // load bf prog
+        strcpy(bf_file_name, argv[2]);
 
-    function_error = loadBfProgram(&bf_program, bf_file_name, &memory_size);
-    if(function_error == 1)
-    {
-      // error in readin file
-      free(bf_program);
-      exit(4);
-    }
-    // set head pointer
+        function_error = loadBfProgram(&bf_program, bf_file_name, &memory_size);
+        if(function_error == 1)
+        {
+          // error in readin file
+          free(bf_program);
+          exit(4);
+        }
+        // set head pointer
 
 
-    // TODO: run bf prog
-    printBfProg(bf_program);
+        // TODO: run bf prog
+        //printBfProg(bf_program);
+        Node* list = create_list(memory_size+1);
+        load_list(list, bf_program, memory_size);
 
-    //free memory
-    free(bf_program);
-    exit(0);
+
+        //free memory
+        free(bf_program);
+        exit(0);
 	}
   else
   {
