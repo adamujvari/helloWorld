@@ -43,9 +43,9 @@ Node* create_list(int num_of_elements)
   Node *head = malloc(sizeof(Node));
   Node *current_pos = head;
 
-  for( counter = 0; counter <= num_of_elements; counter++)
+  for(counter = 0; counter <= num_of_elements; counter++)
   {
-    Node* new = malloc(sizeof(Node));
+    Node *new = malloc(sizeof(Node));
     new->character = 0;
     new->next = NULL;
     new->begin = NULL;
@@ -67,7 +67,7 @@ void load_list(Node* list, char *bf_program, unsigned int memory_size)
   for (counter = 0; counter <= memory_size; counter++)
   {
     list->character = bf_program[counter];
-    if(bf_program[counter] == '[')
+    if (bf_program[counter] == '[')
     {
       brackets[bracket_counter++] = list; // speichern "[" in Array zum loopen
     }
@@ -83,7 +83,7 @@ void load_list(Node* list, char *bf_program, unsigned int memory_size)
 
 
 int loadBfProgram(char **bf_program, char *bf_prog_name,
-  unsigned int *memory_size)
+  unsigned int *memory_size, int *cmd_count)
 {
   FILE *bf_file_ptr = fopen(bf_prog_name, "r");
   if (bf_file_ptr == NULL)
@@ -146,6 +146,7 @@ int loadBfProgram(char **bf_program, char *bf_prog_name,
     else
     {
       fclose (bf_file_ptr);
+      *cmd_count = --memory_counter;
       return 0;
     }    
   }
@@ -264,8 +265,8 @@ int main(int argc, const char *argv[])
 
         // load bf prog
         strcpy(bf_file_name, argv[2]);
-
-        function_error = loadBfProgram(&bf_program, bf_file_name, &memory_size);
+        int cmd_count;
+        function_error = loadBfProgram(&bf_program, bf_file_name, &memory_size, &cmd_count);
         if(function_error == 1)
         {
           // error in readin file
@@ -277,8 +278,8 @@ int main(int argc, const char *argv[])
 
         // TODO: run bf prog
         //printBfProg(bf_program);
-        Node* list = create_list(memory_size+1);
-        load_list(list, bf_program, memory_size);
+        Node* list = create_list(cmd_count);
+        load_list(list, bf_program, cmd_count);
         interpret(list, &data_memory);
 
 
@@ -345,8 +346,8 @@ int main(int argc, const char *argv[])
       resetBfProgramData(&bf_program);
 
       // load program and parse
-      function_error = loadBfProgram(&bf_program, user_input_parameter_two,
-        &memory_size);
+      int cmdd_count;
+      function_error = loadBfProgram(&bf_program, user_input_parameter_two, &memory_size, &cmdd_count);
       if (function_error == 1)
       {
         free(bf_program);
