@@ -121,14 +121,14 @@ void printBfProg(char *bf_program)
 
 int main(int argc, const char *argv[])
 {
-  char command[BUFFER_SIZE];
+  char command[BUFFER_SIZE] = "default";
+  //char program_flag_argument[64] = "default";
   char bf_file_name[128];
   char *bf_program = NULL;
   char *command_splits = "default";
   char *user_input_parameter_one = "default";
   char *user_input_parameter_two = "default";
   char *user_input_parameter_three = "default";
-  char *memory_type;
 
   unsigned int memory_size = BUFFER_SIZE;
   unsigned int show_size_counter;
@@ -137,7 +137,6 @@ int main(int argc, const char *argv[])
   int print_counter = 0;
   int function_error = 0;
   int already_run = 0;
-
 
   // ckecks parameter count for program mode
 	if (argc == 1)
@@ -148,6 +147,8 @@ int main(int argc, const char *argv[])
 	{
     // run .bf program and quit -----------------------------------------------
 
+    // copy flag to compare
+    //strcpy(program_flag_argument, argv[1]);
     // check flag
     if (strcmp(argv[1], "-e") != 0)
     {
@@ -231,6 +232,12 @@ int main(int argc, const char *argv[])
     if (strcmp(user_input_parameter_one, "load") == 0
       && strcmp(user_input_parameter_two, "default") != 0)
     {
+      // free last allocated memory if not first
+      if (bf_program != NULL)
+      {
+        free(bf_program);
+      }
+      
       // reset memory
       resetBfProgramData(&bf_program);
 
@@ -343,19 +350,14 @@ int main(int argc, const char *argv[])
         // Default values: number = aktuelle Position; type = hex.
         // TODO: set default memory number to ptr head
 
-        // set default type
-        memory_type = "hex";
-
         // check for user input
         if (strcmp(user_input_parameter_two, "default") != 0 && 
           strcmp(user_input_parameter_three, "default") != 0)
         {
           // TODO: set memory number to ptr head
-
-          // set default type
-          memory_type = user_input_parameter_three;
         }
-        printf("Memory: %s\n", memory_type);
+
+        printf("Memory\n");
       }
     }
 
