@@ -23,7 +23,7 @@
 #define errorWrongParameterCount "[ERR] wrong parameter count\n"
 #define errorNoFileLoaded "[ERR] no program loaded\n"
 #define errorOutOfMemory "[ERR] out of memory\n"
-#define errorParsingFailed "[ERR] parsing of input failed \n"
+#define errorParsingFailed "[ERR] parsing of input failed\n"
 
 
 
@@ -217,10 +217,6 @@ int main(int argc, const char *argv[])
         }
       }
     }
-
-    // printf("%s\n", user_input_parameter_one);
-    // printf("%s\n", user_input_parameter_two);
-    // printf("%s\n", user_input_parameter_three);
 
     // check whether input was empty
     if (strcmp(command, "\n") == 0)
