@@ -149,9 +149,11 @@ int main(int argc, const char *argv[])
   char *user_input_parameter_one = "default";
   char *user_input_parameter_two = "default";
   char *user_input_parameter_three = "default";
+  char *memory_type;
 
   unsigned int memory_size = BUFFER_SIZE;
   unsigned int show_size_counter;
+  unsigned int step_counter;
 
   int print_counter = 0;
   int function_error = 0;
@@ -324,8 +326,7 @@ int main(int argc, const char *argv[])
     }
 
     // step command
-    if (strcmp(user_input_parameter_one, "step") == 0
-      && strcmp(user_input_parameter_two, "default") != 0) // -----------------
+    if (strcmp(user_input_parameter_one, "step") == 0) // ---------------------
     {
       // check if no program loaded error
       if(bf_program == NULL)
@@ -335,17 +336,22 @@ int main(int argc, const char *argv[])
       }
       else
       {
-        printf("Step.\n");
+        // set default step size
+        step_counter = 1;
+
+        // set to size if entered
+        if (strcmp(user_input_parameter_two, "default") != 0)
+        {
+          step_counter = atoi(user_input_parameter_two);
+        }
+
+        // TODO: run X number of steps
+        printf("Step counter: %i\n", step_counter);
       }
-    }
-    else if (strcmp(user_input_parameter_one, "step") == 0)
-    {
-      errorWrongParameterCount();
     }
 
     // memory command
-    if (strcmp(user_input_parameter_one, "memory") == 0
-      && strcmp(user_input_parameter_three, "default") != 0) // ---------------
+    if (strcmp(user_input_parameter_one, "memory") == 0) // -------------------
     {
       // check if no program loaded error
       if(bf_program == NULL)
@@ -355,13 +361,23 @@ int main(int argc, const char *argv[])
       }
       else
       {
-        printf("Memory.\n");
+        // Default values: number = aktuelle Position; type = hex.
+        // TODO: set default memory number to ptr head
+
+        // set default type
+        memory_type = "hex";
+
+        // check for user input
+        if (strcmp(user_input_parameter_two, "default") != 0 && 
+          strcmp(user_input_parameter_three, "default") != 0)
+        {
+          // TODO: set memory number to ptr head
+
+          // set default type
+          memory_type = user_input_parameter_three;
+        }
+        printf("Memory: %s\n", memory_type);
       }
-    }
-    else if (strcmp(user_input_parameter_one, "memory") == 0 &&
-      strcmp(user_input_parameter_three, "default") == 0)
-    {
-      errorWrongParameterCount();
     }
 
     // show command
