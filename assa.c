@@ -18,6 +18,8 @@
 
 #define BUFFER_SIZE 1024
 
+#define errorAllocate "[ERR]failed to allocate memory\n"
+
 #define errorWrongUsage "[ERR] usage: ./assa [-e brainfuck_filnename]\n"
 #define errorReadingFile "[ERR] reading the file failed\n"
 #define errorWrongParameterCount "[ERR] wrong parameter count\n"
@@ -71,8 +73,8 @@ void load_list(Node* list, char *bf_program, unsigned int memory_size)
     }
     else if (bf_program[counter] == ']')
     {
-      list->begin = brackets[--bracket_counter]; // zeigt auf
-      list->begin->end = list;
+      list->begin = brackets[--bracket_counter]; // zeigt auf "["
+      list->begin->end = list; // "[" zeigt auf "]"
     }
 
     list = list->next;
@@ -172,9 +174,44 @@ void printBfProg(char *bf_program)
   printf("\n");
 }
 
-void interpret()
+void interpret(Node *list, unsigned char **data_memory)
 {
+  unsigned char *start = *data_memory;
+  Node *temp_next;
 
+  while(list->next != NULL)
+  {
+    temp_next = list->next;
+    switch (list->character)
+    {
+      case ('>'):
+        (*data_memory)++;
+        break;
+      case ('<'):
+        if (*data_memory != start) (*data_memory)--;
+        break;
+      case ('+'):
+        (**data_memory)++;
+        break;
+      case ('-'):
+        (**data_memory)--;
+        break;
+      case ('.'):
+        putchar(**data_memory);
+        break;
+      case (','):
+        **data_memory = (unsigned char)getchar();
+        break;
+      case ('['):
+        if (**data_memory == 0) temp_next = list->end->next;
+        break;
+      case (']'):
+        if (**data_memory != 0) temp_next = list->begin->next;
+        break;
+      default: printf("Shit is on fire!\n");
+    }
+    list = temp_next;
+  }
 }
 
 int main(int argc, const char *argv[])
@@ -191,10 +228,18 @@ int main(int argc, const char *argv[])
   unsigned int memory_size = BUFFER_SIZE;
   unsigned int show_size_counter;
   unsigned int step_counter;
+  unsigned char *data_memory;
 
   int print_counter = 0;
   int function_error = 0;
   int already_run = 0;
+
+  data_memory = calloc(BUFFER_SIZE, sizeof(unsigned char));
+  if (data_memory == NULL)
+  {
+    printf(errorAllocate);
+    free(data_memory);
+  }
 
   // ckecks parameter count for program mode
 	if (argc == 1)
@@ -234,6 +279,7 @@ int main(int argc, const char *argv[])
         //printBfProg(bf_program);
         Node* list = create_list(memory_size+1);
         load_list(list, bf_program, memory_size);
+        interpret(list, &data_memory);
 
 
         //free memory
