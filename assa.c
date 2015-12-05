@@ -18,8 +18,6 @@
 
 #define BUFFER_SIZE 1024
 
-#define errorAllocate "[ERR]failed to allocate memory\n"
-
 #define errorWrongUsage "[ERR] usage: ./assa [-e brainfuck_filnename]\n"
 #define errorReadingFile "[ERR] reading the file failed\n"
 #define errorWrongParameterCount "[ERR] wrong parameter count\n"
@@ -30,22 +28,47 @@
 typedef struct _Node_
 {
     char character;
-    struct _Node_* next;
-    struct _Node_* begin;
-    struct _Node_* end;
+    struct _Node_ *next;
+    struct _Node_ *begin;
+    struct _Node_ *end;
 } Node;
 
-// creating list for brainfuck instructions
+void free_list(Node *list)
+{
+  Node *current_pos = list;
+  Node *next_pos;
 
-Node* create_list(int num_of_elements)
+  while (current_pos != NULL)
+  {
+    next_pos = current_pos->next;
+    free(current_pos);
+    current_pos = next_pos;
+  }
+}
+
+// creating linked list for brainfuck instructions
+Node *create_list(int num_of_elements)
 {
   int counter;
   Node *head = malloc(sizeof(Node));
+  if (head == NULL)
+  {
+    printf(errorOutOfMemory);
+    return NULL;
+  }
+
   Node *current_pos = head;
 
   for(counter = 0; counter <= num_of_elements; counter++)
   {
     Node *new = malloc(sizeof(Node));
+    if (new == NULL)
+    {
+      printf(errorOutOfMemory);
+      free_list(head);
+      return NULL;
+    }
+
     new->character = 0;
     new->next = NULL;
     new->begin = NULL;
@@ -54,11 +77,12 @@ Node* create_list(int num_of_elements)
     current_pos->next = new;
     current_pos = new;
   }
+
   return head;
 }
 
 
-void load_list(Node* list, char *bf_program, unsigned int memory_size)
+void load_list(Node *list, char *bf_program, unsigned int memory_size)
 {
   int counter;
   int bracket_counter = 0;
@@ -83,7 +107,7 @@ void load_list(Node* list, char *bf_program, unsigned int memory_size)
 
 
 int loadBfProgram(char **bf_program, char *bf_prog_name,
-  unsigned int *memory_size, int *cmd_count)
+  unsigned int *memory_size, int *command_count)
 {
   FILE *bf_file_ptr = fopen(bf_prog_name, "r");
   if (bf_file_ptr == NULL)
@@ -110,10 +134,9 @@ int loadBfProgram(char **bf_program, char *bf_prog_name,
         realloc_ptr = realloc(*bf_program, *memory_size);
         if (realloc_ptr == NULL)
         {
-          printf(errorOutOfMemory);
-          free(*bf_program);
+          // return 2 for out of memory
           fclose (bf_file_ptr);
-          exit(4);
+          return 2;
         }
 
         *bf_program = realloc_ptr;
@@ -146,7 +169,7 @@ int loadBfProgram(char **bf_program, char *bf_prog_name,
     else
     {
       fclose (bf_file_ptr);
-      *cmd_count = --memory_counter;
+      *command_count = --memory_counter;
       return 0;
     }    
   }
@@ -175,9 +198,11 @@ void printBfProg(char *bf_program)
   printf("\n");
 }
 
-void interpret(Node *list, unsigned char **data_memory)
+void interpret(Node *list, unsigned char **data_memory_in)
 {
-  unsigned char *start = *data_memory;
+  // TODO: this is ugly
+  unsigned char *data_memory = *data_memory_in;
+  unsigned char *start = data_memory;
   Node *temp_next;
 
   while(list->next != NULL)
@@ -186,31 +211,32 @@ void interpret(Node *list, unsigned char **data_memory)
     switch (list->character)
     {
       case ('>'):
-        (*data_memory)++;
+        data_memory++;
         break;
       case ('<'):
-        if (*data_memory != start) (*data_memory)--;
+        if (data_memory != start) (data_memory)--;
         break;
       case ('+'):
-        (**data_memory)++;
+        (*data_memory)++;
         break;
       case ('-'):
-        (**data_memory)--;
+        (*data_memory)--;
         break;
       case ('.'):
-        putchar(**data_memory);
+        putchar(*data_memory);
         break;
       case (','):
-        **data_memory = (unsigned char)getchar();
+        *data_memory = (unsigned char)getchar();
         break;
       case ('['):
-        if (**data_memory == 0) temp_next = list->end->next;
+        if (*data_memory == 0) temp_next = list->end->next;
         break;
       case (']'):
-        if (**data_memory != 0) temp_next = list->begin->next;
+        if (*data_memory != 0) temp_next = list->begin->next;
         break;
       default: printf("Shit is on fire!\n");
     }
+
     list = temp_next;
   }
 }
@@ -218,7 +244,6 @@ void interpret(Node *list, unsigned char **data_memory)
 int main(int argc, const char *argv[])
 {
   char command[BUFFER_SIZE] = "default";
-  //char program_flag_argument[64] = "default";
   char bf_file_name[128];
   char *bf_program = NULL;
   char *command_splits = "default";
@@ -234,58 +259,73 @@ int main(int argc, const char *argv[])
   int print_counter = 0;
   int function_error = 0;
   int already_run = 0;
+  int command_count;
 
   data_memory = calloc(BUFFER_SIZE, sizeof(unsigned char));
   if (data_memory == NULL)
   {
-    printf(errorAllocate);
-    free(data_memory);
+    printf(errorOutOfMemory);
+    exit(2);
   }
 
-  // ckecks parameter count for program mode
-	if (argc == 1)
+  // ckeck parameter count for program mode
+	if (argc == 1) // interactive debug mode ------------------------------------
 	{
-    // interactive debug mode ------------------------------------------------
+
 	}
-	else if (argc == 3)
+	else if (argc == 3) // run .bf program and quit -----------------------------
 	{
-        // run .bf program and quit ------------------------------------------
+    // check flag
+    if (strcmp(argv[1], "-e") != 0)
+    {
+      printf(errorWrongUsage);
+      free(data_memory);
+      exit(1);
+    }
 
-        // copy flag to compare
-        //strcpy(program_flag_argument, argv[1]);
-        // check flag
-        if (strcmp(argv[1], "-e") != 0)
-        {
-          printf(errorWrongUsage);
-          exit(1);
-        }
+    // calloc space for BF program
+    resetBfProgramData(&bf_program);
 
-        // calloc space for BF program
-        resetBfProgramData(&bf_program);
+    // load bf prog
+    strcpy(bf_file_name, argv[2]);
+    function_error = loadBfProgram(&bf_program, bf_file_name, &memory_size, 
+      &command_count);
+    if (function_error == 1)
+    {
+      // error in readin file
+      free(bf_program);
+      free(data_memory);
+      exit(4);
+    }
+    else if (function_error == 2)
+    {
+      // error out of memory
+      printf(errorOutOfMemory);
+      free(bf_program);
+      free(data_memory);
+      exit(2);
+    }
 
-        // load bf prog
-        strcpy(bf_file_name, argv[2]);
-        int cmd_count;
-        function_error = loadBfProgram(&bf_program, bf_file_name, &memory_size, &cmd_count);
-        if(function_error == 1)
-        {
-          // error in readin file
-          free(bf_program);
-          exit(4);
-        }
-        // set head pointer
+    // create linked list
+    Node *list = create_list(command_count);
+    if (list == NULL)
+    {
+      // free memory
+      free(bf_program);
+      free(data_memory);
+      exit(2);
+    }
+
+    load_list(list, bf_program, command_count);
+    interpret(list, &data_memory);
 
 
-        // TODO: run bf prog
-        //printBfProg(bf_program);
-        Node* list = create_list(cmd_count);
-        load_list(list, bf_program, cmd_count);
-        interpret(list, &data_memory);
+    //free memory
+    free(bf_program);
+    free(data_memory);
+    free_list(list);
 
-
-        //free memory
-        free(bf_program);
-        exit(0);
+    exit(0);
 	}
   else
   {
@@ -293,8 +333,8 @@ int main(int argc, const char *argv[])
     exit(1);
   }
 
-  // this block handles user input parameters
-  while (strcmp(command, "quit") != 0)
+  // this block handles user input parameters // ------------------------------
+  while (strcmp(command, "quit") != 0) 
   {
     // writes prefix, gets user input and checks for EOF
     printf("esp> ");
@@ -347,7 +387,8 @@ int main(int argc, const char *argv[])
 
       // load program and parse
       int cmdd_count;
-      function_error = loadBfProgram(&bf_program, user_input_parameter_two, &memory_size, &cmdd_count);
+      function_error = loadBfProgram(&bf_program, user_input_parameter_two, 
+        &memory_size, &cmdd_count);
       if (function_error == 1)
       {
         free(bf_program);
@@ -525,6 +566,7 @@ int main(int argc, const char *argv[])
 
 	// TODO: free all the memory!
   free(bf_program);
+  free(data_memory);
 
 	return 0;
 }
