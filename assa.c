@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define BUFFER_SIZE 1024
 
@@ -28,6 +29,8 @@
 typedef struct _Node_
 {
     char character;
+    char is_break;
+    int position;
     struct _Node_ *next;
     struct _Node_ *begin;
     struct _Node_ *end;
@@ -70,6 +73,8 @@ Node *create_list(int num_of_elements)
     }
 
     new->character = 0;
+    new->is_break = 0;
+    new->position = counter;
     new->next = NULL;
     new->begin = NULL;
     new->end = NULL;
@@ -198,51 +203,90 @@ void printBfProg(char *bf_program)
   printf("\n");
 }
 
-void interpret(Node *list, unsigned char **data_memory_in)
+void interpret(Node *list, unsigned char **data_memory_in, int interactive)
 {
   // TODO: this is ugly
+
+  int shift_right_counter = 0;
   unsigned char *data_memory = *data_memory_in;
   unsigned char *start = data_memory;
+  unsigned char *temp_memory;
   Node *temp_next;
 
   while(list->next != NULL)
   {
-    temp_next = list->next;
-    switch (list->character)
+    if((shift_right_counter+1 % BUFFER_SIZE) == 0)
     {
-      case ('>'):
-        data_memory++;
-        break;
-      case ('<'):
-        if (data_memory != start) (data_memory)--;
-        break;
-      case ('+'):
-        (*data_memory)++;
-        break;
-      case ('-'):
-        (*data_memory)--;
-        break;
-      case ('.'):
-        putchar(*data_memory);
-        break;
-      case (','):
-        *data_memory = (unsigned char)getchar();
-        break;
-      case ('['):
-        if (*data_memory == 0) temp_next = list->end->next;
-        break;
-      case (']'):
-        if (*data_memory != 0) temp_next = list->begin->next;
-        break;
-      default: printf("Shit is on fire!\n");
+      temp_memory = realloc(*data_memory_in, BUFFER_SIZE);
+      if(temp_memory == NULL)
+      {
+        printf(errorOutOfMemory);
+        free(*data_memory_in);
+        return;
+      }
+      else
+      {
+        *data_memory_in = temp_memory;
+      }
+    }
+
+    temp_next = list->next;
+    if(interactive == 1 && list->is_break == 1 )
+    {
+      return;
+    }
+    else {
+      switch (list->character) {
+        case ('>'):
+          shift_right_counter++;
+              data_memory++;
+              break;
+        case ('<'):
+          if (data_memory != start) (data_memory)--;
+              break;
+        case ('+'):
+          (*data_memory)++;
+              break;
+        case ('-'):
+          (*data_memory)--;
+              break;
+        case ('.'):
+          putchar(*data_memory);
+              break;
+        case (','):
+          *data_memory = (unsigned char) getchar();
+              break;
+        case ('['):
+          if (*data_memory == 0) temp_next = list->end->next;
+              break;
+        case (']'):
+          if (*data_memory != 0) temp_next = list->begin->next;
+              break;
+        default:
+          printf("Shit is on fire!\n");
+      }
     }
 
     list = temp_next;
   }
 }
 
+
+
+void setBreak(Node *list, int breakpoint)
+{
+  int ctn = 0;
+  while(list != NULL)
+  {
+    printf("%d\n",ctn++);
+    if(list->position == breakpoint) list->is_break = 1;
+    list = list->next;
+  }
+}
+
 int main(int argc, const char *argv[])
 {
+  Node *list = NULL;
   char command[BUFFER_SIZE] = "default";
   char bf_file_name[128];
   char *bf_program = NULL;
@@ -259,7 +303,8 @@ int main(int argc, const char *argv[])
   int print_counter = 0;
   int function_error = 0;
   int already_run = 0;
-  int command_count;
+  int command_count = 0;
+  int interactive = 0;
 
   data_memory = calloc(BUFFER_SIZE, sizeof(unsigned char));
   if (data_memory == NULL)
@@ -271,61 +316,61 @@ int main(int argc, const char *argv[])
   // ckeck parameter count for program mode
 	if (argc == 1) // interactive debug mode ------------------------------------
 	{
-
+      interactive  = 1;
 	}
 	else if (argc == 3) // run .bf program and quit -----------------------------
 	{
-    // check flag
-    if (strcmp(argv[1], "-e") != 0)
-    {
-      printf(errorWrongUsage);
-      free(data_memory);
-      exit(1);
-    }
+        // check flag
+        if (strcmp(argv[1], "-e") != 0)
+        {
+          printf(errorWrongUsage);
+          free(data_memory);
+          exit(1);
+        }
 
-    // calloc space for BF program
-    resetBfProgramData(&bf_program);
+        // calloc space for BF program
+        resetBfProgramData(&bf_program);
 
-    // load bf prog
-    strcpy(bf_file_name, argv[2]);
-    function_error = loadBfProgram(&bf_program, bf_file_name, &memory_size, 
-      &command_count);
-    if (function_error == 1)
-    {
-      // error in readin file
-      free(bf_program);
-      free(data_memory);
-      exit(4);
-    }
-    else if (function_error == 2)
-    {
-      // error out of memory
-      printf(errorOutOfMemory);
-      free(bf_program);
-      free(data_memory);
-      exit(2);
-    }
+        // load bf prog
+        strcpy(bf_file_name, argv[2]);
+        function_error = loadBfProgram(&bf_program, bf_file_name, &memory_size,
+          &command_count);
+        if (function_error == 1)
+        {
+          // error in readin file
+          free(bf_program);
+          free(data_memory);
+          exit(4);
+        }
+        else if (function_error == 2)
+        {
+          // error out of memory
+          printf(errorOutOfMemory);
+          free(bf_program);
+          free(data_memory);
+          exit(2);
+        }
 
-    // create linked list
-    Node *list = create_list(command_count);
-    if (list == NULL)
-    {
-      // free memory
-      free(bf_program);
-      free(data_memory);
-      exit(2);
-    }
+        // create linked list
+        list = create_list(command_count);
+        if (list == NULL)
+        {
+          // free memory
+          free(bf_program);
+          free(data_memory);
+          exit(2);
+        }
 
-    load_list(list, bf_program, command_count);
-    interpret(list, &data_memory);
+        load_list(list, bf_program, command_count);
+        interpret(list, &data_memory, interactive);
 
 
-    //free memory
-    free(bf_program);
-    free(data_memory);
-    free_list(list);
+        //free memory
+        free(bf_program);
+        free(data_memory);
+        free_list(list);
 
-    exit(0);
+        exit(0);
 	}
   else
   {
@@ -420,7 +465,7 @@ int main(int argc, const char *argv[])
       else
       {
         // run bf prog // print as of now
-        printBfProg(bf_program);
+        interpret(list, &data_memory, interactive);
         already_run = 1;
       }
     }
@@ -448,7 +493,23 @@ int main(int argc, const char *argv[])
       }
       else
       {
-        printf("Break.\n");
+        int i;
+        int param = 0;
+        int bool = 1;
+        for (i = 0; i < strlen(user_input_parameter_two); i++)
+        {
+          if (isdigit(user_input_parameter_two[i]) == 0)
+          {
+            bool = 0;
+            break;
+          }
+        }
+        if (bool == 1)
+        {
+          param = atoi(user_input_parameter_two);
+          setBreak(list, param);
+          printf("Break point set at %d \n", param);
+        }
       }
     }
     else if (strcmp(user_input_parameter_one, "break") == 0)
