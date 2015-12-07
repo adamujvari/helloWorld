@@ -192,10 +192,11 @@ void callocBfProgramData(unsigned char **bf_program_data)
 
 void interpret(Node *list, unsigned char **data_memory_in, int interactive)
 {
-  // TODO: this is ugly
   // TODO: interpret run till breakpoint
 
   int shift_right_counter = 0;
+
+  // TODO: this is ugly
   unsigned char *data_memory = *data_memory_in;
   unsigned char *start = data_memory;
   unsigned char *temp_memory;
@@ -259,8 +260,6 @@ void interpret(Node *list, unsigned char **data_memory_in, int interactive)
   }
 }
 
-
-
 void setBreak(Node *list, int breakpoint)
 {
   //int counter = 0;
@@ -275,6 +274,9 @@ void setBreak(Node *list, int breakpoint)
 int main(int argc, const char *argv[])
 {
   Node *list = NULL;
+  Node *list_iterator = NULL;
+  Node *start_node = NULL;
+
   char command[BUFFER_SIZE] = "default";
   char bf_file_name[128];
   char *command_splits = "default";
@@ -594,17 +596,27 @@ int main(int argc, const char *argv[])
       {
         // set default size
         show_size_counter = 10;
+
         // set to size if entered
         if (strcmp(user_input_parameter_two, "default") != 0)
         {
           show_size_counter = atoi(user_input_parameter_two);
         }
 
-        // TODO: jump to ptr head
-        for (print_counter = 0; print_counter < show_size_counter && 
-          bf_program[print_counter] != '\0'; ++print_counter)
+        list_iterator = list;
+
+        // go to instruction ptr head
+        while (list_iterator != start_node)
         {
-          printf("%c", bf_program[print_counter]);
+          list_iterator = list_iterator->next;
+        }
+
+        // print next SIZE elements OR till EOF
+        for (print_counter = 0; print_counter < show_size_counter && 
+          list_iterator->next != NULL; ++print_counter)
+        {
+          printf("%c", list_iterator->character);
+          list_iterator = list_iterator->next;
         }
 
         printf("\n");
