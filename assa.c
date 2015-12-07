@@ -315,13 +315,14 @@ int main(int argc, const char *argv[])
   unsigned int memory_size = BUFFER_SIZE;
   unsigned int show_size_counter;
   unsigned int step_counter;
-  int data_memory_size = BUFFER_SIZE;
 
+  int data_memory_size = BUFFER_SIZE;
   int print_counter = 0;
   int function_error = 0;
   int already_run = 0;
   int command_count = 0;
   int interactive = 0;
+  int memory_id;
 
   // ckeck parameter count for program mode
 	if (argc == 1) // interactive debug mode ------------------------------------
@@ -475,21 +476,23 @@ int main(int argc, const char *argv[])
         free(data_memory);
         exit(2);
       }
-
-      // create linked list
-      list = create_list(command_count);
-      if (list == NULL)
+      else
       {
-        // free memory
-        free(bf_program);
-        free(data_memory);
-        exit(2);
+        // create linked list
+        list = create_list(command_count);
+        if (list == NULL)
+        {
+          // free memory
+          free(bf_program);
+          free(data_memory);
+          exit(2);
+        }
+
+        load_list(list, bf_program, command_count);
+        start_node = list;
+
+        already_run = 0;
       }
-
-      load_list(list, bf_program, command_count);
-      start_node = list;
-
-      already_run = 0;
     }
     else if (strcmp(user_input_parameter_one, "load") == 0)
     {
@@ -590,25 +593,51 @@ int main(int argc, const char *argv[])
     if (strcmp(user_input_parameter_one, "memory") == 0) // -------------------
     {
       // check if no program loaded error
-      if(bf_program == NULL)
+      if(list == NULL)
       {
         // no prog loaded error
         printf(errorNoFileLoaded);
       }
       else
       {
-        // Default values: number = aktuelle Position; type = hex.
-        // TODO: set default memory number to ptr head
+        // default values: number = instruction ptr position; type = hex.
+        list_iterator = start_node;
+        memory_id = 0;
 
         // check for user input
         if (strcmp(user_input_parameter_two, "default") != 0 && 
           strcmp(user_input_parameter_three, "default") != 0)
         {
-          // TODO: set memory number to ptr head
-        }
+          // set memory number to ptr head
+          memory_id = atoi(user_input_parameter_two);
 
-        printf("Memory\n");
+          // go to memory location
+        }
+        printf("Memory ID: %i\n", memory_id);
+
+        if (strcmp(user_input_parameter_three, "int") == 0)
+        {
+          // print memory in INT
+          printf("Int at %i: %i", memory_id, data_memory[memory_id]);
+        }
+        else if (strcmp(user_input_parameter_three, "bin") == 0)
+        {
+          // print memory in BIN
+          printf("Bin at %i: %d", memory_id, data_memory[memory_id]);
+        }
+        else if (strcmp(user_input_parameter_three, "char") == 0)
+        {
+          // print memory in CHAR
+          printf("Char at %i: %c", memory_id, data_memory[memory_id]);
+        }
+        else
+        {
+          // print memory in HEX
+          printf("Hex at %i: %x", memory_id, (unsigned int)data_memory[memory_id]);
+        }
       }
+
+      printf("\n");
     }
 
     // show command
@@ -649,6 +678,19 @@ int main(int argc, const char *argv[])
 
         printf("\n");
       }
+    }
+
+    // dump data_memory
+    if (strcmp(user_input_parameter_one, "dump") == 0 && data_memory != NULL)
+    {
+      int i = 0;
+      while (i != 1024)
+      {
+        printf(".%c", data_memory[i]);
+        i++;
+      }
+
+      printf("\n");
     }
 
     // change command
