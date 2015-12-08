@@ -406,15 +406,15 @@ int main(int argc, const char *argv[])
     user_input_parameter_three = "default";
 
     // split user input into parameters
-    command_splits = strtok(command, " \n");
+    command_splits = strtok(command, " \n\t");
     if (command_splits != NULL)
     {
       user_input_parameter_one = command_splits;
-      command_splits = strtok(NULL, " \n");
+      command_splits = strtok(NULL, " \n\t");
       if (command_splits != NULL)
       {
         user_input_parameter_two = command_splits;
-        command_splits = strtok(NULL, " \n");
+        command_splits = strtok(NULL, " \n\t");
         if (command_splits != NULL)
         {
           user_input_parameter_three = command_splits;
