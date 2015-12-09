@@ -125,7 +125,7 @@ int parseAndSaveCharacter(char character, unsigned int *memory_size,
 
     unsigned char *realloc_ptr;
 
-    *memory_size *= 2;
+    (*memory_size) *= 2;
 
     realloc_ptr = realloc(*bf_program, *memory_size);
     if (realloc_ptr == NULL)
@@ -181,6 +181,7 @@ int loadBfProgram(unsigned char *bf_program, char *bf_prog_name,
     }
     if (function_error == 2)
     {
+      // out of memory error
       fclose(bf_file_ptr);
       return 2;
     }
@@ -332,6 +333,28 @@ void printList(Node *list)
   }
 }
 
+void freeAllTheMemory(unsigned char **bf_program, unsigned char **data_memory, 
+  Node **list)
+{
+  if (*bf_program != NULL)
+  {
+    free(*bf_program);
+    *bf_program = NULL;
+  }
+
+  if (*data_memory != NULL)
+  {
+    free(*data_memory);
+    *data_memory = NULL;
+  }
+
+  if (*list != NULL)
+  {
+    free_list(*list);
+    *list = NULL;
+  }
+}
+
 int main(int argc, const char *argv[])
 {
   Node *list = NULL;
@@ -386,16 +409,14 @@ int main(int argc, const char *argv[])
       if (function_error == 1)
       {
         // error in readin file
-        free(bf_program);
-        free(data_memory);
+        freeAllTheMemory(&bf_program, &data_memory, &list);
         exit(4);
       }
       else if (function_error == 2)
       {
         // error out of memory
         printf(errorOutOfMemory);
-        free(bf_program);
-        free(data_memory);
+        freeAllTheMemory(&bf_program, &data_memory, &list);
         exit(2);
       }
 
@@ -404,8 +425,7 @@ int main(int argc, const char *argv[])
       if (list == NULL)
       {
         // free memory
-        free(bf_program);
-        free(data_memory);
+        freeAllTheMemory(&bf_program, &data_memory, &list);
         exit(2);
       }
 
@@ -421,9 +441,7 @@ int main(int argc, const char *argv[])
       interpret(&start_node, &data_memory, &data_memory_size,interactive);
 
       //free memory
-      free(bf_program);
-      free(data_memory);
-      free_list(list);
+      freeAllTheMemory(&bf_program, &data_memory, &list);
 
       exit(0);
 	}
@@ -477,23 +495,7 @@ int main(int argc, const char *argv[])
       && strcmp(user_input_parameter_two, "default") != 0) // -----------------
     {
       // free last allocated memory if not first
-      if (bf_program != NULL)
-      {
-        free(bf_program);
-        bf_program = NULL;
-      }
-
-      if (data_memory != NULL)
-      {
-        free(data_memory);
-        data_memory = NULL;
-      }
-
-      if (list != NULL)
-      {
-        free_list(list);
-        list = NULL;
-      }
+      freeAllTheMemory(&bf_program, &data_memory, &list);
       
       // reset memory
       callocBfProgramData(&bf_program);
@@ -504,11 +506,7 @@ int main(int argc, const char *argv[])
         &memory_size, &memory_counter);
       if (function_error == 1)
       {
-        // error in readin file
-        free(bf_program);
-
-        // reset values
-        bf_program = NULL;
+        // error in readin file, reset values
         function_error = 0;
         already_run = 0;
       }
@@ -516,8 +514,7 @@ int main(int argc, const char *argv[])
       {
         // error out of memory
         printf(errorOutOfMemory);
-        free(bf_program);
-        free(data_memory);
+        freeAllTheMemory(&bf_program, &data_memory, &list);
         exit(2);
       }
       else
@@ -527,8 +524,7 @@ int main(int argc, const char *argv[])
         if (list == NULL)
         {
           // free memory
-          free(bf_program);
-          free(data_memory);
+          freeAllTheMemory(&bf_program, &data_memory, &list);
           exit(2);
         }
 
@@ -566,23 +562,7 @@ int main(int argc, const char *argv[])
       && strcmp(user_input_parameter_two, "default") != 0) // -----------------
     {
       // free last allocated memory if not first
-      if (bf_program != NULL)
-      {
-        free(bf_program);
-        bf_program = NULL;
-      }
-
-      if (data_memory != NULL)
-      {
-        free(data_memory);
-        data_memory = NULL;
-      }
-
-      if (list != NULL)
-      {
-        free_list(list);
-        list = NULL;
-      }
+      freeAllTheMemory(&bf_program, &data_memory, &list);
       
       // allocate memory
       callocBfProgramData(&bf_program);
@@ -794,10 +774,8 @@ int main(int argc, const char *argv[])
     printf("Bye.\n");
   }
 
-	// TODO: free all the memory!
-  free(bf_program);
-  free(data_memory);
-  free_list(list);
+	// free all the memory!
+  freeAllTheMemory(&bf_program, &data_memory, &list);
 
 	return 0;
 }
