@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 #define BUFFER_SIZE 1024
 #define errorWrongUsage "[ERR] usage: ./assa [-e brainfuck_filnename]\n"
@@ -226,73 +227,148 @@ unsigned char *callocData(unsigned char *array, int old_size, int new_size)
   return new;
 }
 
+int checkIfDigits(char *user_input_parameter)
+{
+  int counter;
+  for (counter = 0; counter < strlen(user_input_parameter); counter++)
+  {
+    if (isdigit(user_input_parameter[counter]) == 0)
+    {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int checkIfHex(char *user_input_parameter)
+{
+  int counter;
+  for (counter = 0; counter < strlen(user_input_parameter); counter++)
+  {
+    if((isxdigit(user_input_parameter[counter]) == 0) ||
+            user_input_parameter[counter] == 'x')
+    {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+unsigned char convertToDecimal(char *user_input_parameter)
+{
+  const int base = 16; // Base of Hexadecimal Number
+  long long_number = 0;
+  unsigned char decimal_number;
+
+  long_number  = strtol(user_input_parameter, NULL, base);
+
+  if(long_number < 256 && long_number > 0)
+  {
+    decimal_number = (unsigned char) long_number;
+  }
+  else
+  {
+    printf(errorWrongUsage);
+    exit(0);
+  }
+
+  return decimal_number;
+}
+
+void change(int position, unsigned char *data_memory, unsigned char input)
+{
+
+}
+
 void interpret(Node **start_node, unsigned char **data_memory_in,
-               int *data_memory_size,int interactive)
+               int *data_memory_size,int interactive, int command_count ,
+               int step_counter, int *shift_right_counter)
 {
   // TODO: interpret run till breakpoint
 
-  int shift_right_counter = 0;
   unsigned char *data_memory = *data_memory_in;
   unsigned char *start = data_memory;
   unsigned char *temp_memory;
   Node *temp_next;
 
-  while((*start_node) != NULL )
+  if((*start_node) != NULL)
   {
-    if((shift_right_counter+1 % BUFFER_SIZE) == 0)
+    if((((*start_node)->position) + step_counter) < command_count)
     {
-      temp_memory = callocData(*data_memory_in, *data_memory_size,
-                               (*data_memory_size)*2);
-      *data_memory_size *= 2;
-      if(temp_memory == NULL)
-      {
-        printf(errorOutOfMemory);
-        free(*data_memory_in);
-        return;
-      }
-      else
-      {
-        *data_memory_in = temp_memory;
-        free(temp_memory);
-      }
+      step_counter += (*start_node)->position;
     }
-
-    temp_next = (*start_node)->next;
-    if(interactive == 1 && (*start_node)->is_break == 1 )
+    else
     {
-      printf("\n");
+      step_counter = command_count;
+      printf("End of program reached!\n");
+    }
+  }
+
+
+  while ((*start_node) != NULL)
+  {
+    if(((*start_node)->position == step_counter) ||
+            (step_counter > command_count))
+    {
       return;
     }
-    else {
-      switch ((*start_node)->character) {
-        case ('>'):
-          shift_right_counter++;
-              data_memory++;
-              break;
-        case ('<'):
-          if (data_memory != start) (data_memory)--;
-              break;
-        case ('+'):
-          (*data_memory)++;
-              break;
-        case ('-'):
-          (*data_memory)--;
-              break;
-        case ('.'):
-          putchar(*data_memory);
-              break;
-        case (','):
-          *data_memory = (unsigned char) getchar();
-              break;
-        case ('['):
-          if (*data_memory == 0) temp_next = (*start_node)->end->next;
-              break;
-        case (']'):
-          if (*data_memory != 0) temp_next = (*start_node)->begin->next;
-              break;
-        default:
-          printf("Shit is on fire! = %x\n", (*start_node)->character);
+    else
+    {
+      if (((*shift_right_counter) + 1 % BUFFER_SIZE) == 0)
+      {
+        temp_memory = callocData(*data_memory_in, *data_memory_size,
+                                 (*data_memory_size) * 2);
+        *data_memory_size *= 2;
+        if (temp_memory == NULL)
+        {
+          printf(errorOutOfMemory);
+          free(*data_memory_in);
+          return;
+        }
+        else {
+          *data_memory_in = temp_memory;
+          free(temp_memory);
+        }
       }
+
+      temp_next = (*start_node)->next;
+      if (interactive == 1 && (*start_node)->is_break == 1)
+      {
+        printf("\n");
+        return;
+      }
+      else {
+        switch ((*start_node)->character) {
+          case ('>'):
+            (*shift_right_counter)++;
+                data_memory++;
+                break;
+          case ('<'):
+            if (data_memory != start) (data_memory)--;
+                break;
+          case ('+'):
+            (*data_memory)++;
+                break;
+          case ('-'):
+            (*data_memory)--;
+                break;
+          case ('.'):
+            putchar(*data_memory);
+                break;
+          case (','):
+            *data_memory = (unsigned char) getchar();
+                break;
+          case ('['):
+            if (*data_memory == 0) temp_next = (*start_node)->end->next;
+                break;
+          case (']'):
+            if (*data_memory != 0) temp_next = (*start_node)->begin->next;
+                break;
+          default:
+            printf("Shit is on fire!\n");
+        }
+      }
+      (*start_node) = temp_next;
     }
     (*start_node) = temp_next;
   }
@@ -303,7 +379,6 @@ void setBreak(Node *list, int breakpoint)
   //int counter = 0;
   while(list != NULL)
   {
-    //printf("%d\n",counter++);
     if(list->position == breakpoint)
     {
       list->is_break = 1;
@@ -367,6 +442,7 @@ int main(int argc, const char *argv[])
   char user_input_parameter_one[BUFFER_SIZE];
   char user_input_parameter_two[BUFFER_SIZE];
   char user_input_parameter_three[BUFFER_SIZE];
+  unsigned char change_input = 0;
 
   unsigned char *bf_program = NULL;
   unsigned char *data_memory = NULL;
@@ -381,8 +457,12 @@ int main(int argc, const char *argv[])
   int already_run = 0;
   int memory_counter = 0;
   int interactive = 0;
+  int shift_right_counter = 0;
+  int break_point = 0;
   int memory_id;
   int loop_counter;
+
+
 
   // ckeck parameter count for program mode
 	if (argc == 1) // interactive debug mode ------------------------------------
@@ -438,7 +518,8 @@ int main(int argc, const char *argv[])
       printf("\n");
 
       start_node = list;
-      interpret(&start_node, &data_memory, &data_memory_size,interactive);
+      interpret(&start_node, &data_memory, &data_memory_size,interactive,
+                memory_size,-1, &shift_right_counter);
 
       //free memory
       freeAllTheMemory(&bf_program, &data_memory, &list);
@@ -552,7 +633,8 @@ int main(int argc, const char *argv[])
       {
         // run bf prog
 
-        interpret(&start_node, &data_memory, &data_memory_size,interactive);
+        interpret(&start_node, &data_memory, &data_memory_size,interactive,
+                  memory_size ,-1, &shift_right_counter);
         already_run = 1;
       }
     }
@@ -593,22 +675,15 @@ int main(int argc, const char *argv[])
       }
       else
       {
-        int i;
-        int param = 0;
-        int bool = 1;
-        for (i = 0; i < strlen(user_input_parameter_two); i++)
+        if (checkIfDigits(user_input_parameter_two))
         {
-          if (isdigit(user_input_parameter_two[i]) == 0)
-          {
-            bool = 0;
-            break;
-          }
-        }
-        if (bool == 1)
-        {
-          param = atoi(user_input_parameter_two);
-          setBreak(list, param);
+          break_point = atoi(user_input_parameter_two);
+          setBreak(list, break_point);
           //printf("Break point set at %c \n", list->character);
+        }
+        else
+        {
+          printf(errorWrongUsage);
         }
       }
     }
@@ -634,11 +709,13 @@ int main(int argc, const char *argv[])
         // set to size if entered
         if (strcmp(user_input_parameter_two, "default") != 0)
         {
-          step_counter = atoi(user_input_parameter_two);
+          step_counter = (unsigned int)atoi(user_input_parameter_two);
         }
 
-        // TODO: run X number of steps
-        printf("Step counter: %i\n", step_counter);
+        interactive = 0;
+        interpret(&start_node, &data_memory, &data_memory_size,interactive,
+                  memory_size, step_counter, &shift_right_counter);
+
       }
     }
 
@@ -747,18 +824,33 @@ int main(int argc, const char *argv[])
     }
 
     // change command
-    if (strcmp(user_input_parameter_one, "change") == 0
-      && strcmp(user_input_parameter_three, "default") != 0) // ---------------
+    if (strcmp(user_input_parameter_one, "change") == 0) // ---------------
     {
       // check if no program loaded error
-      if(bf_program == NULL)
+      if(list == NULL)
       {
         // no prog loaded error
         printf(errorNoFileLoaded);
       }
       else
       {
-        printf("Change.\n");
+        change(shift_right_counter, data_memory, change_input);
+      }
+    }
+    else if (strcmp(user_input_parameter_one, "change") == 0 &&
+             strcmp(user_input_parameter_two, "default") != 0 &&
+             strcmp(user_input_parameter_three, "default") != 0) //------------
+    {
+      if(checkIfDigits(user_input_parameter_two) &&
+              checkIfHex(user_input_parameter_three))
+      {
+        int data_position = atoi(user_input_parameter_two);
+        change_input = convertToDecimal(user_input_parameter_three);
+        change(data_position, data_memory, change_input);
+      }
+      else
+      {
+        printf(errorWrongUsage);
       }
     }
     else if (strcmp(user_input_parameter_one, "change") == 0 &&
