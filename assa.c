@@ -277,7 +277,7 @@ unsigned char convertToDecimal(char *user_input_parameter)
 
 void change(int position, unsigned char *data_memory, unsigned char input)
 {
-
+  data_memory[position] = input;
 }
 
 void interpret(Node **start_node, unsigned char **data_memory_in,
@@ -394,7 +394,7 @@ void printBfInstructions(unsigned char *bf_program)
 
   for (print_counter = 0; bf_program[print_counter] != '\0'; ++print_counter)
   {
-    printf("%c", bf_program[print_counter]);
+    printf("%x", bf_program[print_counter]);
   }
   printf("\n");
 }
