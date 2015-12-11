@@ -128,7 +128,7 @@ int parseAndSaveCharacter(char character, unsigned int *memory_size,
 
     (*memory_size) *= 2;
 
-    realloc_ptr = realloc(*bf_program, *memory_size);
+    realloc_ptr = realloc(*bf_program, (*memory_size) * sizeof(unsigned char));
     if (realloc_ptr == NULL)
     {
       // return 2 for out of memory
@@ -157,7 +157,7 @@ int parseAndSaveCharacter(char character, unsigned int *memory_size,
   return 0;
 }
 
-int loadBfProgram(unsigned char *bf_program, char *bf_prog_name,
+int loadBfProgram(unsigned char **bf_program, char *bf_prog_name,
   unsigned int *memory_size, int *memory_counter)
 {
   FILE *bf_file_ptr = fopen(bf_prog_name, "r");
@@ -178,7 +178,7 @@ int loadBfProgram(unsigned char *bf_program, char *bf_prog_name,
     while ((next_char = fgetc(bf_file_ptr)) != EOF)
     {
       function_error = parseAndSaveCharacter(next_char, memory_size, 
-        memory_counter, &bracket_counter, &bf_program);
+        memory_counter, &bracket_counter, bf_program);
     }
     if (function_error == 2)
     {
@@ -200,7 +200,7 @@ int loadBfProgram(unsigned char *bf_program, char *bf_prog_name,
       --(*memory_counter);
 
       return 0;
-    }    
+    }
   }
 }
 
@@ -443,6 +443,7 @@ int main(int argc, const char *argv[])
   char user_input_parameter_two[BUFFER_SIZE];
   char user_input_parameter_three[BUFFER_SIZE];
   unsigned char change_input = 0;
+  char next_char;
 
   unsigned char *bf_program = NULL;
   unsigned char *data_memory = NULL;
@@ -459,10 +460,9 @@ int main(int argc, const char *argv[])
   int interactive = 0;
   int shift_right_counter = 0;
   int break_point = 0;
+  int bracket_counter = 0;
   int memory_id;
   int loop_counter;
-
-
 
   // ckeck parameter count for program mode
 	if (argc == 1) // interactive debug mode ------------------------------------
@@ -484,7 +484,7 @@ int main(int argc, const char *argv[])
 
       // load bf prog
       strcpy(bf_file_name, argv[2]);
-      function_error = loadBfProgram(bf_program, bf_file_name, &memory_size,
+      function_error = loadBfProgram(&bf_program, bf_file_name, &memory_size,
         &memory_counter);
       if (function_error == 1)
       {
@@ -583,7 +583,7 @@ int main(int argc, const char *argv[])
       callocBfProgramData(&data_memory);
 
       // load program and parse
-      function_error = loadBfProgram(bf_program, user_input_parameter_two, 
+      function_error = loadBfProgram(&bf_program, user_input_parameter_two,
         &memory_size, &memory_counter);
       if (function_error == 1)
       {
@@ -612,7 +612,7 @@ int main(int argc, const char *argv[])
         load_list(list, bf_program, memory_counter);
         start_node = list;
 
-        already_run = 0;
+        already_run = 0; // TODO: ask what the shit
       }
     }
     else if (strcmp(user_input_parameter_one, "load") == 0)
@@ -650,12 +650,43 @@ int main(int argc, const char *argv[])
       callocBfProgramData(&bf_program);
       callocBfProgramData(&data_memory);
 
-      // load program and parse
-
+      // reset values
+      bracket_counter = 0;
+      memory_counter = 0;
       loop_counter = 0;
-      while (user_input_parameter_two[loop_counter] != '\0')
+
+      // load program and parse
+      for (loop_counter = 0; loop_counter < BUFFER_SIZE; ++loop_counter)
       {
-        // this^&*^*^&^*^&
+        // char by char
+        next_char = user_input_parameter_two[loop_counter];
+        printf("Char: %c", next_char);
+
+        function_error = parseAndSaveCharacter(next_char, &memory_size, 
+          &memory_counter, &bracket_counter, &bf_program);
+        loop_counter++;
+      }
+
+      if (function_error == 2)
+      {
+        // out of memory error
+        printf(errorOutOfMemory);
+      }
+
+      // count correct number of bf loops
+      if (bracket_counter != 0)
+      {
+        printf(errorParsingFailed);
+      }
+      else
+      {
+        --memory_counter;
+        printf("memory_counter: %i\n", memory_counter);
+
+        load_list(list, bf_program, memory_counter);
+        start_node = list;
+
+        already_run = 0;
       }
     }
     else if (strcmp(user_input_parameter_one, "eval") == 0)
