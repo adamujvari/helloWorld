@@ -430,6 +430,18 @@ void freeAllTheMemory(unsigned char **bf_program, unsigned char **data_memory,
   }
 }
 
+void inToBinary(unsigned int number, char *binary_value)
+{
+  int loop_counter;
+  binary_value[8] = '\0';
+
+  for (loop_counter = 7; loop_counter >= 0; --loop_counter, number >>= 1)
+  {
+      binary_value[loop_counter] = (number & 1) + '0';
+  }
+
+}
+
 int main(int argc, const char *argv[])
 {
   Node *list = NULL;
@@ -455,7 +467,6 @@ int main(int argc, const char *argv[])
   int data_memory_size = BUFFER_SIZE;
   int print_counter = 0;
   int function_error = 0;
-  int already_run = 0;
   int memory_counter = 0;
   int interactive = 0;
   int shift_right_counter = 0;
@@ -511,15 +522,9 @@ int main(int argc, const char *argv[])
 
       load_list(list, bf_program, memory_counter);
 
-      //printf("memory_counter: %s\n", memory_counter);
-      printf("memory_counter: %i\n", memory_counter);
-      printf("memory_size: %i\n", memory_size);
-      printList(list);
-      printf("\n");
-
       start_node = list;
-      interpret(&start_node, &data_memory, &data_memory_size,interactive,
-                memory_size,-1, &shift_right_counter);
+      interpret(&start_node, &data_memory, &data_memory_size,interactive, 
+        memory_size,-1, &shift_right_counter);
 
       //free memory
       freeAllTheMemory(&bf_program, &data_memory, &list);
@@ -589,7 +594,6 @@ int main(int argc, const char *argv[])
       {
         // error in readin file, reset values
         function_error = 0;
-        already_run = 0;
       }
       else if (function_error == 2)
       {
@@ -611,8 +615,6 @@ int main(int argc, const char *argv[])
 
         load_list(list, bf_program, memory_counter);
         start_node = list;
-
-        already_run = 0; // TODO: ask what the shit
       }
     }
     else if (strcmp(user_input_parameter_one, "load") == 0)
@@ -623,19 +625,16 @@ int main(int argc, const char *argv[])
     // run command
     if (strcmp(user_input_parameter_one, "run") == 0) // ----------------------
     {
-      //TODO: if no program loaded error
-      if(list == NULL || already_run == 1)
+      // if no program loaded error
+      if(list == NULL)
       {
-        // no prog loaded error
         printf(errorNoFileLoaded);
       }
       else
       {
         // run bf prog
-
-        interpret(&start_node, &data_memory, &data_memory_size,interactive,
-                  memory_size ,-1, &shift_right_counter);
-        already_run = 1;
+        interpret(&start_node, &data_memory, &data_memory_size,interactive, 
+          memory_size ,-1, &shift_right_counter);
       }
     }
 
@@ -656,17 +655,14 @@ int main(int argc, const char *argv[])
       loop_counter = 0;
 
       // load program and parse
-      for (loop_counter = 0; loop_counter < BUFFER_SIZE; ++loop_counter)
+      while (user_input_parameter_two[loop_counter] != '\0')
       {
-        // char by char
         next_char = user_input_parameter_two[loop_counter];
-        printf("Char: %c", next_char);
 
         function_error = parseAndSaveCharacter(next_char, &memory_size, 
           &memory_counter, &bracket_counter, &bf_program);
         loop_counter++;
       }
-
       if (function_error == 2)
       {
         // out of memory error
@@ -681,12 +677,23 @@ int main(int argc, const char *argv[])
       else
       {
         --memory_counter;
-        printf("memory_counter: %i\n", memory_counter);
+
+        // create list
+        list = create_list(memory_counter);
+        if (list == NULL)
+        {
+          // free memory
+          freeAllTheMemory(&bf_program, &data_memory, &list);
+          exit(2);
+        }
 
         load_list(list, bf_program, memory_counter);
         start_node = list;
 
-        already_run = 0;
+        // run bf prog
+        interpret(&start_node, &data_memory, &data_memory_size,interactive, 
+          memory_size ,-1, &shift_right_counter);
+        start_node = list;
       }
     }
     else if (strcmp(user_input_parameter_one, "eval") == 0)
@@ -763,7 +770,7 @@ int main(int argc, const char *argv[])
       {
         // default values: number = instruction ptr position; type = hex.
         list_iterator = start_node;
-        memory_id = 0;
+        memory_id = 0; // TODO: set correctly!
 
         // check for user input
         if (strcmp(user_input_parameter_two, "default") != 0 && 
@@ -771,20 +778,21 @@ int main(int argc, const char *argv[])
         {
           // set memory number to ptr head
           memory_id = atoi(user_input_parameter_two);
-
-          // go to memory location
         }
-        printf("Memory ID: %i\n", memory_id);
 
         if (strcmp(user_input_parameter_three, "int") == 0)
         {
           // print memory in INT
-          printf("Int at %i: %i", memory_id, data_memory[memory_id]);
+          printf("Integer at %i: %i", memory_id, data_memory[memory_id]);
         }
         else if (strcmp(user_input_parameter_three, "bin") == 0)
         {
           // print memory in BIN
-          printf("Bin at %i: %d", memory_id, data_memory[memory_id]);
+          char binary_value[8];
+          inToBinary(data_memory[memory_id], binary_value);
+          
+          // int to binary function
+          printf("Binary at %i: %s", memory_id, binary_value);
         }
         else if (strcmp(user_input_parameter_three, "char") == 0)
         {
@@ -794,7 +802,8 @@ int main(int argc, const char *argv[])
         else
         {
           // print memory in HEX
-          printf("Hex at %i: %x", memory_id, (unsigned int)data_memory[memory_id]);
+          printf("Hex at %i: %x", memory_id, 
+            (unsigned int)data_memory[memory_id]);
         }
       }
 
@@ -821,17 +830,11 @@ int main(int argc, const char *argv[])
           show_size_counter = (unsigned int)atoi(user_input_parameter_two);
         }
 
-        list_iterator = list;
-
-        // go to instruction ptr head
-        while (list_iterator != start_node)
-        {
-          list_iterator = list_iterator->next;
-        }
+        list_iterator = start_node;
 
         // print next SIZE elements OR till EOF
         for (print_counter = 0; print_counter < show_size_counter && 
-          list_iterator->next != NULL; ++print_counter)
+          list_iterator != NULL; print_counter++)
         {
           printf("%c", list_iterator->character);
           list_iterator = list_iterator->next;
@@ -839,19 +842,6 @@ int main(int argc, const char *argv[])
 
         printf("\n");
       }
-    }
-
-    // dump data_memory TODO: remove before submission
-    if (strcmp(user_input_parameter_one, "dump") == 0 && data_memory != NULL)
-    {
-      int i = 0;
-      while (i != 1024)
-      {
-        printf(".%c", data_memory[i]);
-        i++;
-      }
-
-      printf("\n");
     }
 
     // change command
