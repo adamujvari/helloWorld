@@ -281,7 +281,7 @@ void change(int position, unsigned char *data_memory, unsigned char input)
 }
 
 void interpret(Node **start_node, unsigned char **data_memory_in,
-               int *data_memory_size,int interactive, int command_count ,
+               int *data_memory_size, int interactive, int command_count ,
                int step_counter, int *shift_right_counter)
 {
   // TODO: interpret run till breakpoint
@@ -293,19 +293,18 @@ void interpret(Node **start_node, unsigned char **data_memory_in,
 
   if((*start_node) != NULL)
   {
-    if((((*start_node)->position) + step_counter) < command_count)
-    {
-      step_counter += (*start_node)->position;
-    }
-    else
+    if((((*start_node)->position) + step_counter) > command_count)
     {
       step_counter = command_count;
-      printf("End of program reached!\n");
     }
   }
+  else
+  {
+    printf(errorNoFileLoaded);
+    return;
+  }
 
-
-  while ((*start_node) != NULL)
+  do
   {
     if(((*start_node)->position == step_counter) ||
             (step_counter > command_count))
@@ -334,10 +333,15 @@ void interpret(Node **start_node, unsigned char **data_memory_in,
       temp_next = (*start_node)->next;
       if (interactive == 1 && (*start_node)->is_break == 1)
       {
-        printf("\n");
+        if((*start_node)->character == '.')
+        {
+          printf("\n");
+        }
+        (*start_node)->is_break = 0;
         return;
       }
-      else {
+      else
+      {
         switch ((*start_node)->character) {
           case ('>'):
             (*shift_right_counter)++;
@@ -370,8 +374,7 @@ void interpret(Node **start_node, unsigned char **data_memory_in,
       }
       (*start_node) = temp_next;
     }
-    (*start_node) = temp_next;
-  }
+  } while ((*start_node) != NULL);
 }
 
 void setBreak(Node *list, int breakpoint)
@@ -744,10 +747,6 @@ int main(int argc, const char *argv[])
           setBreak(list, break_point);
           //printf("Break point set at %c \n", list->character);
         }
-        else
-        {
-          printf(errorWrongUsage);
-        }
       }
     }
     else if (strcmp(user_input_parameter_one, "break") == 0)
@@ -777,7 +776,7 @@ int main(int argc, const char *argv[])
 
         interactive = 0;
         interpret(&start_node, &data_memory, &data_memory_size,interactive,
-                  memory_size, step_counter, &shift_right_counter);
+          memory_size, step_counter, &shift_right_counter);
 
       }
     }
@@ -815,7 +814,7 @@ int main(int argc, const char *argv[])
           // print memory in BIN
           char binary_value[8];
           inToBinary(data_memory[memory_id], binary_value);
-          
+
           // int to binary function
           printf("Binary at %i: %s", memory_id, binary_value);
         }
@@ -881,22 +880,18 @@ int main(int argc, const char *argv[])
       else
       {
         change(shift_right_counter, data_memory, change_input);
+        printf("er hat change gemacht ... iwie\n");
       }
     }
     else if (strcmp(user_input_parameter_one, "change") == 0 &&
-             strcmp(user_input_parameter_two, "default") != 0 &&
              strcmp(user_input_parameter_three, "default") != 0) //------------
     {
-      if(checkIfDigits(user_input_parameter_two) &&
-              checkIfHex(user_input_parameter_three))
-      {
+      if (checkIfDigits(user_input_parameter_two) == 1 &&
+          checkIfHex(user_input_parameter_three) == 1) {
         int data_position = atoi(user_input_parameter_two);
         change_input = convertToDecimal(user_input_parameter_three);
         change(data_position, data_memory, change_input);
-      }
-      else
-      {
-        printf(errorWrongUsage);
+        printf("er glaubt es funktioniert ..\n");
       }
     }
   }
