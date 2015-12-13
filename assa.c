@@ -281,8 +281,8 @@ void change(int position, unsigned char *data_memory, unsigned char input)
 }
 
 void interpret(Node **start_node, unsigned char **data_memory_in,
-               int *data_memory_size, int interactive, int command_count ,
-               int step_counter, int *shift_right_counter)
+  int *data_memory_size, int interactive, int command_count ,
+    int step_counter, int *shift_right_counter)
 {
   // TODO: interpret run till breakpoint
 
@@ -400,6 +400,15 @@ void printBfInstructions(unsigned char *bf_program)
     printf("%x", bf_program[print_counter]);
   }
   printf("\n");
+}
+
+void printNodes(Node *list)
+{
+  while (list != NULL)
+  {
+    printf("%c %x %i\n", list->character, list->is_break, list->position);
+    list = list->next;
+  }
 }
 
 void printList(Node *list)
@@ -647,7 +656,7 @@ int main(int argc, const char *argv[])
       printf(errorWrongParameterCount);
     }
 
-    // run command
+    // run command ------------------------------------------------------------
     if (strcmp(user_input_parameter_one, "run") == 0)
     {
       // if no program loaded error
@@ -716,12 +725,16 @@ int main(int argc, const char *argv[])
         }
 
         loadList(eval_list, eval_memory, memory_counter);
-        start_node = eval_list;
 
         // run bf prog
-        interpret(&start_node, &data_memory, &data_memory_size,interactive, 
-          memory_size ,-1, &shift_right_counter);
-        
+        interpret(&eval_list, &data_memory, &data_memory_size, interactive, 
+          memory_size , -1, &shift_right_counter);
+
+        // free eval instructions
+        freeList(eval_list);
+        eval_list = NULL;
+        free(eval_memory);
+        eval_memory = NULL;
       }
     }
     else if (strcmp(user_input_parameter_one, "eval") == 0)
@@ -775,7 +788,7 @@ int main(int argc, const char *argv[])
         }
 
         interactive = 0;
-        interpret(&start_node, &data_memory, &data_memory_size,interactive,
+        interpret(&start_node, &data_memory, &data_memory_size, interactive,
           memory_size, step_counter, &shift_right_counter);
 
       }
@@ -794,7 +807,7 @@ int main(int argc, const char *argv[])
       {
         // default values: number = instruction ptr position; type = hex.
         list_iterator = start_node;
-        memory_id = 0; // TODO: set correctly!
+        memory_id = shift_right_counter; // TODO: check!!
 
         // check for user input
         if (strcmp(user_input_parameter_two, "default") != 0 && 
@@ -868,6 +881,12 @@ int main(int argc, const char *argv[])
       }
     }
 
+    // dump command TODO: REMOVE -----------------
+    if (strcmp(user_input_parameter_one, "dump") == 0)
+    {
+      printNodes(list);
+    }
+
     // change command ---------------------------------------------------------
     if (strcmp(user_input_parameter_one, "change") == 0)
     {
@@ -884,11 +903,13 @@ int main(int argc, const char *argv[])
       }
     }
     else if (strcmp(user_input_parameter_one, "change") == 0 &&
-             strcmp(user_input_parameter_three, "default") != 0) //------------
+      strcmp(user_input_parameter_three, "default") != 0)
     {
       if (checkIfDigits(user_input_parameter_two) == 1 &&
-          checkIfHex(user_input_parameter_three) == 1) {
+          checkIfHex(user_input_parameter_three) == 1) 
+      {
         int data_position = atoi(user_input_parameter_two);
+
         change_input = convertToDecimal(user_input_parameter_three);
         change(data_position, data_memory, change_input);
         printf("er glaubt es funktioniert ..\n");
