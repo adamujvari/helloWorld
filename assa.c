@@ -330,9 +330,11 @@ void interpret(Node **start_node, unsigned char **data_memory_position,
         }
       }
 
+      //printf("interactive is %d\n", interactive);
       temp_next = (*start_node)->next;
       if (interactive == 1 && (*start_node)->is_break == 1)
       {
+        //printf("he got in here\n");
         if((*start_node)->character == '.')
         {
           printf("\n");
@@ -683,6 +685,7 @@ int main(int argc, const char *argv[])
       else
       {
         // run bf prog
+        interactive = 1;
         interpret(&start_node, &data_memory_position, data_memory,
                   &data_memory_size, interactive, memory_size, -1,
                   &shift_right_counter);
@@ -805,7 +808,7 @@ int main(int argc, const char *argv[])
           step_counter = (unsigned int)atoi(user_input_parameter_two);
         }
 
-        interactive = 0;
+        interactive = 1;
         interpret(&start_node, &data_memory_position, data_memory,
                   &data_memory_size, interactive, memory_size, step_counter,
                   &shift_right_counter);
