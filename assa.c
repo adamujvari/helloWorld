@@ -280,15 +280,15 @@ void change(int position, unsigned char *data_memory, unsigned char input)
   data_memory[position] = input;
 }
 
-void interpret(Node **start_node, unsigned char **data_memory_in,
-  int *data_memory_size, int interactive, int command_count ,
-    int step_counter, int *shift_right_counter)
+void interpret(Node **start_node, unsigned char **data_memory_position,
+               unsigned char *data_memory, int *data_memory_size,
+               int interactive, int command_count, int step_counter,
+               int *shift_right_counter)
 {
   // TODO: interpret run till breakpoint
 
-  unsigned char *data_memory = *data_memory_in;
-  unsigned char *start = data_memory;
   unsigned char *temp_memory;
+  unsigned int go_right = 0;
   Node *temp_next;
 
   if((*start_node) != NULL)
@@ -313,19 +313,19 @@ void interpret(Node **start_node, unsigned char **data_memory_in,
     }
     else
     {
-      if (((*shift_right_counter) + 1 % BUFFER_SIZE) == 0)
+      if ((go_right + 1 % BUFFER_SIZE) == 0)
       {
-        temp_memory = callocData(*data_memory_in, *data_memory_size,
+        temp_memory = callocData(*data_memory_position, *data_memory_size,
                                  (*data_memory_size) * 2);
         *data_memory_size *= 2;
         if (temp_memory == NULL)
         {
           printf(errorOutOfMemory);
-          free(*data_memory_in);
+          free(*data_memory_position);
           return;
         }
         else {
-          *data_memory_in = temp_memory;
+          *data_memory_position = temp_memory;
           free(temp_memory);
         }
       }
@@ -344,35 +344,47 @@ void interpret(Node **start_node, unsigned char **data_memory_in,
       {
         switch ((*start_node)->character) {
           case ('>'):
-            (*shift_right_counter)++;
-                data_memory++;
+                (*shift_right_counter)++;
+                go_right++;
+                (*data_memory_position)++;
                 break;
           case ('<'):
-            if (data_memory != start) (data_memory)--;
+                if ((*data_memory_position) != data_memory)
+                {
+                  (*shift_right_counter)--;
+                  (*data_memory_position)--;
+                }
                 break;
           case ('+'):
-            (*data_memory)++;
+            (**data_memory_position)++;
                 break;
           case ('-'):
-            (*data_memory)--;
+            (**data_memory_position)--;
                 break;
           case ('.'):
-            putchar(*data_memory);
+            putchar(**data_memory_position);
                 break;
           case (','):
-            *data_memory = (unsigned char) getchar();
+            **data_memory_position = (unsigned char) getchar();
                 break;
           case ('['):
-            if (*data_memory == 0) temp_next = (*start_node)->end->next;
+            if (**data_memory_position == 0)
+            {
+              temp_next = (*start_node)->end->next;
+            }
                 break;
           case (']'):
-            if (*data_memory != 0) temp_next = (*start_node)->begin->next;
+            if (**data_memory_position != 0)
+            {
+              temp_next = (*start_node)->begin->next;
+            }
                 break;
           default:
             printf("Shit is on fire!\n");
         }
       }
       (*start_node) = temp_next;
+      //printf("data position ist: %d \n", (*data_position));
     }
   } while ((*start_node) != NULL);
 }
@@ -485,6 +497,7 @@ int main(int argc, const char *argv[])
   unsigned char *bf_program = NULL;
   unsigned char *eval_memory = NULL;
   unsigned char *data_memory = NULL;
+  unsigned char *data_memory_position = NULL;
 
   unsigned int memory_size = BUFFER_SIZE;
   unsigned int show_size_counter;
@@ -495,7 +508,7 @@ int main(int argc, const char *argv[])
   int function_error = 0;
   int memory_counter = 0;
   int interactive = 0;
-  int shift_right_counter = 0;
+  int shift_right_counter;
   int break_point = 0;
   int bracket_counter = 0;
   int memory_id;
@@ -553,8 +566,10 @@ int main(int argc, const char *argv[])
       loadList(list, bf_program, memory_counter);
 
       start_node = list;
-      interpret(&start_node, &data_memory, &data_memory_size,interactive, 
-        memory_size,-1, &shift_right_counter);
+      data_memory_position = data_memory;
+      interpret(&start_node, &data_memory_position, data_memory,
+                &data_memory_size, interactive, memory_size, -1,
+                &shift_right_counter);
 
       //free memory
       freeAllTheMemory(&bf_program, &data_memory, &list, &eval_memory, 
@@ -649,6 +664,7 @@ int main(int argc, const char *argv[])
 
         loadList(list, bf_program, memory_counter);
         start_node = list;
+        data_memory_position = data_memory;
       }
     }
     else if (strcmp(user_input_parameter_one, "load") == 0)
@@ -667,8 +683,9 @@ int main(int argc, const char *argv[])
       else
       {
         // run bf prog
-        interpret(&start_node, &data_memory, &data_memory_size,interactive, 
-          memory_size ,-1, &shift_right_counter);
+        interpret(&start_node, &data_memory_position, data_memory,
+                  &data_memory_size, interactive, memory_size, -1,
+                  &shift_right_counter);
       }
     }
 
@@ -727,8 +744,9 @@ int main(int argc, const char *argv[])
         loadList(eval_list, eval_memory, memory_counter);
 
         // run bf prog
-        interpret(&eval_list, &data_memory, &data_memory_size, interactive, 
-          memory_size , -1, &shift_right_counter);
+        interpret(&eval_list, &data_memory_position, data_memory,
+                  &data_memory_size, interactive, memory_size, -1,
+                  &shift_right_counter);
 
         // free eval instructions
         freeList(eval_list);
@@ -788,8 +806,9 @@ int main(int argc, const char *argv[])
         }
 
         interactive = 0;
-        interpret(&start_node, &data_memory, &data_memory_size, interactive,
-          memory_size, step_counter, &shift_right_counter);
+        interpret(&start_node, &data_memory_position, data_memory,
+                  &data_memory_size, interactive, memory_size, step_counter,
+                  &shift_right_counter);
 
       }
     }
@@ -807,7 +826,7 @@ int main(int argc, const char *argv[])
       {
         // default values: number = instruction ptr position; type = hex.
         list_iterator = start_node;
-        memory_id = shift_right_counter; // TODO: check!!
+        memory_id = shift_right_counter;
 
         // check for user input
         if (strcmp(user_input_parameter_two, "default") != 0 && 
