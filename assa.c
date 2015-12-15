@@ -285,7 +285,6 @@ void interpret(Node **start_node, unsigned char **data_memory_position,
     int interactive, int command_count, int step_counter,
       int *shift_right_counter)
 {
-  unsigned int was_print = 0;
   unsigned char *temp_memory;
   unsigned int go_right = 0;
   Node *temp_next;
@@ -304,11 +303,13 @@ void interpret(Node **start_node, unsigned char **data_memory_position,
     return;
   }
 
-  do
+  while ((*start_node) != NULL)
   {
+    //printf("Current head position is: %d\n", (*start_node)->position);
+    //printf("Step_counter is: %d\n", step_counter);
+
     // break do while if # steps done
-    if(((*start_node)->position == step_counter) ||
-      (step_counter > command_count))
+    if(step_counter == 0)
     {
       return;
     }
@@ -342,52 +343,53 @@ void interpret(Node **start_node, unsigned char **data_memory_position,
       }
       else
       {
-        switch ((*start_node)->character) {
+        switch ((*start_node)->character)
+        {
           case ('>'):
-                (*shift_right_counter)++;
-                go_right++;
-                (*data_memory_position)++;
-                break;
+            (*shift_right_counter)++;
+            go_right++;
+            (*data_memory_position)++;
+            break;
           case ('<'):
-                if ((*data_memory_position) != data_memory)
-                {
-                  (*shift_right_counter)--;
-                  (*data_memory_position)--;
-                }
-                break;
+            if ((*data_memory_position) != data_memory)
+            {
+              (*shift_right_counter)--;
+              (*data_memory_position)--;
+            }
+            break;
           case ('+'):
             (**data_memory_position)++;
-                break;
+            break;
           case ('-'):
             (**data_memory_position)--;
-                break;
+            break;
           case ('.'):
             putchar(**data_memory_position);
-            was_print = 1;
-                break;
+            break;
           case (','):
             **data_memory_position = (unsigned char) getchar();
-                break;
+            break;
           case ('['):
             if (**data_memory_position == 0)
             {
               temp_next = (*start_node)->end->next;
             }
-                break;
+            break;
           case (']'):
             if (**data_memory_position != 0)
             {
-              temp_next = (*start_node)->begin->next;
+              temp_next = (*start_node)->begin;
             }
-                break;
+            break;
           default:
             printf("Shit is on fire!\n");
         }
       }
 
       (*start_node) = temp_next;
+      step_counter--;
     }
-  } while ((*start_node) != NULL);
+  }
 }
 
 void setBreak(Node *list, int breakpoint)
@@ -781,7 +783,7 @@ int main(int argc, const char *argv[])
         // set to size if entered
         if (strcmp(user_input_parameter_two, "default") != 0)
         {
-          if (checkIfDigits(user_input_parameter_one))
+          if (checkIfDigits(user_input_parameter_two))
           {
             step_counter = (unsigned int)atoi(user_input_parameter_two);
           }
