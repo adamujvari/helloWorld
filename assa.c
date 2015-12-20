@@ -404,7 +404,7 @@ void change(int position, unsigned char *data_memory, unsigned char input)
 
 //-----------------------------------------------------------------------------
 ///
-/// t
+/// interprets the brainfuck instructions
 ///
 /// @param 
 /// @param 
