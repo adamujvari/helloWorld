@@ -16,12 +16,16 @@
 // Latest Changes: XX.XX.2015
 //-----------------------------------------------------------------------------
 //
+
+// libraries
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
 
+
+// defines
 #define BUFFER_SIZE 1024
 #define errorWrongUsage "[ERR] usage: ./assa [-e brainfuck_filnename]\n"
 #define errorReadingFile "[ERR] reading the file failed\n"
@@ -30,6 +34,7 @@
 #define errorOutOfMemory "[ERR] out of memory\n"
 #define errorParsingFailed "[ERR] parsing of input failed\n"
 
+// typedef struct
 typedef struct _Node_
 {
   char character;
@@ -265,8 +270,8 @@ int loadBfProgram(unsigned char **bf_program, char *bf_prog_name,
 
 //-----------------------------------------------------------------------------
 ///
-/// Takes a doube pointer and allocates the defined size of memory for it and 
-/// zero initializes it.
+/// Takes a doube pointer and allocates the defined size of memory for the bf
+/// instruction memory and zero initializes it.
 ///
 /// @param unsigned char **bf_program_data double ptr to allocate memory for
 ///
@@ -288,12 +293,12 @@ void callocBfProgramData(unsigned char **bf_program_data)
 ///
 /// Allocates new memory for data memory.
 ///
-/// @param unsigned char *array
-/// @param int old_size 
-/// @param int new_size
+/// @param unsigned char *array.
+/// @param int old_size current size of the data memory.
+/// @param int new_size new, doubled size of the data memory.
 ///
-/// @return unsigned char *ptr of new array if successful
-/// @return NULL ptr if out of memory
+/// @return unsigned char *ptr of new array if successful.
+/// @return NULL ptr if out of memory.
 //
 unsigned char *callocData(unsigned char *array, int old_size, int new_size)
 {
@@ -311,13 +316,12 @@ unsigned char *callocData(unsigned char *array, int old_size, int new_size)
 
 //-----------------------------------------------------------------------------
 ///
-/// t
+/// Checks if user input were true digits only.
 ///
-/// @param 
-/// @param 
-/// @param 
+/// @param char *user_input_parameter ptr to user input.
 ///
-/// @return none
+/// @return int 0, false if not digits only.
+/// @return int 1, true if contains only digits.
 //
 int checkIfDigits(char *user_input_parameter)
 {
@@ -334,13 +338,12 @@ int checkIfDigits(char *user_input_parameter)
 
 //-----------------------------------------------------------------------------
 ///
-/// t
+/// Checks if user input was a correct hex input.
 ///
-/// @param 
-/// @param 
-/// @param 
+/// @param char *user_input_parameter ptr to user input.
 ///
-/// @return none
+/// @return int 0, false if not correct.
+/// @return int 1, true if correct.
 //
 int checkIfHex(char *user_input_parameter)
 {
@@ -348,7 +351,7 @@ int checkIfHex(char *user_input_parameter)
   for (counter = 0; counter < strlen(user_input_parameter); counter++)
   {
     if((isxdigit(user_input_parameter[counter]) == 0) ||
-            user_input_parameter[counter] == 'x')
+      user_input_parameter[counter] == 'x')
     {
       return 0;
     }
@@ -358,17 +361,15 @@ int checkIfHex(char *user_input_parameter)
 
 //-----------------------------------------------------------------------------
 ///
-/// t
+/// Converts user input to a decimal number.
 ///
-/// @param 
-/// @param 
-/// @param 
+/// @param char *user_input_parameter ptr to user input.
 ///
-/// @return none
+/// @return unsigned char decimal_number converted number.
 //
 unsigned char convertToDecimal(char *user_input_parameter)
 {
-  const int base = 16; // Base of Hexadecimal Number
+  const int base = 16;
   long long_number = 0;
   unsigned char decimal_number;
 
@@ -381,7 +382,7 @@ unsigned char convertToDecimal(char *user_input_parameter)
   else
   {
     printf(errorWrongUsage);
-    exit(0);
+    exit(0); // TODO: change, this is not allowed
   }
 
   return decimal_number;
@@ -389,13 +390,13 @@ unsigned char convertToDecimal(char *user_input_parameter)
 
 //-----------------------------------------------------------------------------
 ///
-/// t
+/// Changes the value on the given position to user input in the data memory.
 ///
-/// @param 
-/// @param 
-/// @param 
+/// @param int position to be changed.
+/// @param unsigned char *data_memory ptr to data memory.
+/// @param unsigned char input to be changed to.
 ///
-/// @return none
+/// @return none.
 //
 void change(int position, unsigned char *data_memory, unsigned char input)
 {
@@ -404,13 +405,21 @@ void change(int position, unsigned char *data_memory, unsigned char input)
 
 //-----------------------------------------------------------------------------
 ///
-/// interprets the brainfuck instructions
+/// Interprets the brainfuck instructions
 ///
-/// @param 
-/// @param 
-/// @param 
+/// @param Node **start_node double ptr to instruction to be interpreted.
+/// @param unsigned char **data_memory_position double ptr to current position
+///        in the data memory.
+/// @param unsigned char *data_memory ptr to the head of the data memory.
+/// @param int *data_memory_size ptr to the size of data memory.
+/// @param int interactive bool that switches interpreting between interactive 
+///        and simple mode.
+/// @param int command_count number of bf instructions.
+/// @param int step_counter number of instructions to be interpreted.
+/// @param int *shift_right_counter ptr to number of right shifts in the data
+///        memory.
 ///
-/// @return none
+/// @return none.
 //
 void interpret(Node **start_node, unsigned char **data_memory_position,
   unsigned char *data_memory, int *data_memory_size,
@@ -525,17 +534,15 @@ void interpret(Node **start_node, unsigned char **data_memory_position,
 
 //-----------------------------------------------------------------------------
 ///
-/// t
+/// Sets a break point at the given position.
 ///
-/// @param 
-/// @param 
-/// @param 
+/// @param Node *list ptr to head of bf instruction linked list.
+/// @param int breakpoint id of instruction where breakpoint has to be set.
 ///
-/// @return none
+/// @return none.
 //
 void setBreak(Node *list, int breakpoint)
 {
-  //int counter = 0;
   while(list != NULL)
   {
     if(list->position == breakpoint)
@@ -549,13 +556,15 @@ void setBreak(Node *list, int breakpoint)
 
 //-----------------------------------------------------------------------------
 ///
-/// t
+/// Frees all allocated memory.
 ///
-/// @param 
-/// @param 
-/// @param 
+/// @param unsigned char **bf_program double ptr to bf instruction memory
+/// @param unsigned char **data_memory double ptr to data memory
+/// @param Node **list double ptr to bf instruction linked list
+/// @param unsigned char **eval_memory double ptr to eval instruction memory.
+/// @param Node **eval_list double ptr to eval instruction linked list.
 ///
-/// @return none
+/// @return none.
 //
 void freeAllTheMemory(unsigned char **bf_program, unsigned char **data_memory, 
   Node **list, unsigned char **eval_memory, Node **eval_list)
@@ -593,13 +602,12 @@ void freeAllTheMemory(unsigned char **bf_program, unsigned char **data_memory,
 
 //-----------------------------------------------------------------------------
 ///
-/// t
+/// Converts an integer to binary.
 ///
-/// @param 
-/// @param 
-/// @param 
+/// @param unsigned int number to be converted.
+/// @param char *binary_value ptr to converted output.
 ///
-/// @return none
+/// @return none.
 //
 void inToBinary(unsigned int number, char *binary_value)
 {
@@ -615,13 +623,20 @@ void inToBinary(unsigned int number, char *binary_value)
 
 //-----------------------------------------------------------------------------
 ///
-/// t
+/// The main program. 
+/// Reads and interprets the esoteric porgramming language: Brainfuck. It also
+/// has debug options.
+/// Switches between program run modes.
+/// Handles user input, commands and errors. 
 ///
-/// @param 
-/// @param 
-/// @param 
+/// @param int argc the number of parameters entered at program start.
+/// @param const char *argv[] ptr to the parameters entered at program start.
 ///
-/// @return none
+/// @return int 0 if program exits without any errors.
+/// @return int 1 if wrong usage of program.
+/// @return int 2 if out of memory.
+/// @return int 3 if parsing the file in normal mode failed.
+/// @return int 4 if reading the file in normal mode failed.
 //
 int main(int argc, const char *argv[])
 {
@@ -637,17 +652,13 @@ int main(int argc, const char *argv[])
   char user_input_parameter_one[BUFFER_SIZE];
   char user_input_parameter_two[BUFFER_SIZE];
   char user_input_parameter_three[BUFFER_SIZE];
-  unsigned char change_input = 0;
   char next_char;
 
+  unsigned char change_input = 0;
   unsigned char *bf_program = NULL;
   unsigned char *eval_memory = NULL;
   unsigned char *data_memory = NULL;
   unsigned char *data_memory_position = NULL;
-
-  unsigned int memory_size = BUFFER_SIZE;
-  unsigned int show_size_counter = 0;
-  unsigned int step_counter = 0;
 
   int data_memory_size = BUFFER_SIZE;
   int print_counter = 0;
@@ -659,6 +670,11 @@ int main(int argc, const char *argv[])
   int bracket_counter = 0;
   int memory_id = 0;
   int loop_counter = 0;
+
+  unsigned int memory_size = BUFFER_SIZE;
+  unsigned int show_size_counter = 0;
+  unsigned int step_counter = 0;
+
 
   // ckeck parameter count for program mode
 	if (argc == 1) // interactive debug mode ------------------------------------
@@ -784,7 +800,9 @@ int main(int argc, const char *argv[])
         &memory_size, &memory_counter);
       if (function_error == 1)
       {
-        // error in readin file, reset values
+        // error in readin file: free and reset values
+        freeAllTheMemory(&bf_program, &data_memory, &list, &eval_memory, 
+          &eval_list);
         function_error = 0;
       }
       else if (function_error == 2)
