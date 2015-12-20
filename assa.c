@@ -125,27 +125,31 @@ Node *createList(int num_of_elements)
 ///
 /// @param Node *list ptr to head of linked list.
 /// @param unsigned char *bf_program ptr to parsed instructions.
-/// @param int memory_size TODO this + comments
+/// @param int memory_counter number of bf instructions.
 ///
 /// @return none.
 //
-void loadList(Node *list, unsigned char *bf_program, int memory_size)
+void loadList(Node *list, unsigned char *bf_program, int memory_counter)
 {
   int counter;
   int bracket_counter = 0;
-  Node* brackets[memory_size/2]; // maximal die hälfte des programs sind "["
+  Node *brackets[memory_counter/2];
 
-  for (counter = 0; counter <= memory_size; counter++)
+  for (counter = 0; counter <= memory_counter; counter++)
   {
     list->character = bf_program[counter];
     if (bf_program[counter] == '[')
     {
-      brackets[bracket_counter++] = list; // speichern "[" in Array zum loopen
+      // save position of loop start
+      brackets[bracket_counter++] = list;
     }
     else if (bf_program[counter] == ']')
     {
-      list->begin = brackets[--bracket_counter]; // zeigt auf "["
-      list->begin->end = list; // "[" zeigt auf "]"
+      // loop start position
+      list->begin = brackets[--bracket_counter];
+
+      // loop start points to loop end
+      list->begin->end = list;
     }
 
     list = list->next;
@@ -284,7 +288,6 @@ void callocBfProgramData(unsigned char **bf_program_data)
   if (*bf_program_data == NULL)
   {
     printf(errorOutOfMemory);
-    // TODO: check for memory leak.
     exit(2);
   }
 }
@@ -333,6 +336,7 @@ int checkIfDigits(char *user_input_parameter)
       return 0;
     }
   }
+  
   return 1;
 }
 
@@ -356,6 +360,7 @@ int checkIfHex(char *user_input_parameter)
       return 0;
     }
   }
+
   return 1;
 }
 
@@ -381,8 +386,7 @@ unsigned char convertToDecimal(char *user_input_parameter)
   }
   else
   {
-    printf(errorWrongUsage);
-    exit(0); // TODO: change, this is not allowed
+    return 0;
   }
 
   return decimal_number;
@@ -725,9 +729,9 @@ int main(int argc, const char *argv[])
       }
 
       loadList(list, bf_program, memory_counter);
-
       start_node = list;
       data_memory_position = data_memory;
+
       interpret(&start_node, &data_memory_position, data_memory,
         &data_memory_size, interactive, memory_size, -1,
           &shift_right_counter);
