@@ -24,7 +24,6 @@
 #include <ctype.h>
 #include <math.h>
 
-
 // defines
 #define BUFFER_SIZE 1024
 #define errorWrongUsage "[ERR] usage: ./assa [-e brainfuck_filnename]\n"
@@ -336,7 +335,7 @@ int checkIfDigits(char *user_input_parameter)
       return 0;
     }
   }
-  
+
   return 1;
 }
 
@@ -613,7 +612,7 @@ void freeAllTheMemory(unsigned char **bf_program, unsigned char **data_memory,
 ///
 /// @return none.
 //
-void inToBinary(unsigned int number, char *binary_value)
+void intToBinary(unsigned int number, char *binary_value)
 {
   int loop_counter;
   binary_value[8] = '\0';
@@ -805,8 +804,8 @@ int main(int argc, const char *argv[])
       if (function_error == 1)
       {
         // error in readin file: free and reset values
-        freeAllTheMemory(&bf_program, &data_memory, &list, &eval_memory, 
-          &eval_list);
+        // freeAllTheMemory(&bf_program, &data_memory, &list, &eval_memory, 
+        //   &eval_list);
         function_error = 0;
       }
       else if (function_error == 2)
@@ -850,7 +849,6 @@ int main(int argc, const char *argv[])
       else
       {
         // run bf prog
-        interactive = 1;
         interpret(&start_node, &data_memory_position, data_memory,
           &data_memory_size, interactive, memory_size, -1,
             &shift_right_counter);
@@ -982,7 +980,6 @@ int main(int argc, const char *argv[])
           }
         }
 
-        interactive = 1;
         interpret(&start_node, &data_memory_position, data_memory,
           &data_memory_size, interactive, memory_size, step_counter,
             &shift_right_counter);
@@ -1023,7 +1020,7 @@ int main(int argc, const char *argv[])
         {
           // print memory in BIN
           char binary_value[8];
-          inToBinary(data_memory[memory_id], binary_value);
+          intToBinary(data_memory[memory_id], binary_value);
 
           // int to binary function
           printf("Binary at %i: %s", memory_id, binary_value);
