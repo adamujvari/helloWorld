@@ -2,6 +2,10 @@
 // assa.c
 //
 // brainfuck interpreter
+// 
+// This program is a brainfuck interpreter with debug functionality.
+// The user can run the program in two different modes, interpret only and 
+// debug. 
 //
 // Group: 2 - study assistant Angela Promitzer
 //
@@ -36,6 +40,14 @@ typedef struct _Node_
   struct _Node_ *end;
 } Node;
 
+//-----------------------------------------------------------------------------
+///
+/// Free linked list.
+///
+/// @param Node *list ptr to list to be free'd.
+///
+/// @return none.
+//
 void freeList(Node *list)
 {
   Node *current_pos = list;
@@ -49,7 +61,15 @@ void freeList(Node *list)
   }
 }
 
-// creating linked list for brainfuck instructions
+//-----------------------------------------------------------------------------
+///
+/// Create linked list for brainfuck instructions.
+///
+/// @param int num_of_elements number of bf instructions.
+///
+/// @return Node *ptr head if successful.
+/// @return NULL ptr if out of memory.
+//
 Node *createList(int num_of_elements)
 {
   int counter;
@@ -93,7 +113,17 @@ Node *createList(int num_of_elements)
   return head;
 }
 
-
+//-----------------------------------------------------------------------------
+///
+/// Takes the parsed brainfuck instructions and loads them into the already 
+/// created linked list elements.
+///
+/// @param Node *list ptr to head of linked list.
+/// @param unsigned char *bf_program ptr to parsed instructions.
+/// @param int memory_size TODO this + comments
+///
+/// @return none.
+//
 void loadList(Node *list, unsigned char *bf_program, int memory_size)
 {
   int counter;
@@ -117,6 +147,20 @@ void loadList(Node *list, unsigned char *bf_program, int memory_size)
   }
 }
 
+//-----------------------------------------------------------------------------
+///
+/// Takes a character and checks it for correctnes. Fills it into the specified
+/// array of instructions.
+///
+/// @param char character to be checked.
+/// @param unsigned int *memory_size ptr to size of allocated memory of array.
+/// @param int *memory_counter ptr to number of elements in array.
+/// @param int *bracket_counter ptr to number of brackets.
+/// @param unsigned char **bf_program double ptr to bf instructions.
+///
+/// @return int 0 if successful.
+/// @return int 2 if out of memory.
+//
 int parseAndSaveCharacter(char character, unsigned int *memory_size, 
   int *memory_counter, int *bracket_counter, unsigned char **bf_program)
 {
@@ -157,6 +201,21 @@ int parseAndSaveCharacter(char character, unsigned int *memory_size,
   return 0;
 }
 
+//-----------------------------------------------------------------------------
+///
+/// Opens a specified file, if said file is present and a correct it parses its
+/// contents and fills the instructions character by character into a linked 
+/// list.
+///
+/// @param unsigned char **bf_program double ptr to original instructions.
+/// @param char *bf_prog_name ptr to the file name to open.
+/// @param unsigned int *memory_size ptr to current allocated memory size.
+/// @param int *memory_counter ptr to number of bf instructions.
+///
+/// @return int 0 if successful.
+/// @return int 1 if reading the file failed.
+/// @return int 2 if out of memory.
+//
 int loadBfProgram(unsigned char **bf_program, char *bf_prog_name,
   unsigned int *memory_size, int *memory_counter)
 {
@@ -204,6 +263,15 @@ int loadBfProgram(unsigned char **bf_program, char *bf_prog_name,
   }
 }
 
+//-----------------------------------------------------------------------------
+///
+/// Takes a doube pointer and allocates the defined size of memory for it and 
+/// zero initializes it.
+///
+/// @param unsigned char **bf_program_data double ptr to allocate memory for
+///
+/// @return none.
+//
 void callocBfProgramData(unsigned char **bf_program_data)
 {
   // calloc default memory for bf prog data
@@ -211,22 +279,46 @@ void callocBfProgramData(unsigned char **bf_program_data)
   if (*bf_program_data == NULL)
   {
     printf(errorOutOfMemory);
+    // TODO: check for memory leak.
     exit(2);
   }
 }
 
+//-----------------------------------------------------------------------------
+///
+/// Allocates new memory for data memory.
+///
+/// @param unsigned char *array
+/// @param int old_size 
+/// @param int new_size
+///
+/// @return unsigned char *ptr of new array if successful
+/// @return NULL ptr if out of memory
+//
 unsigned char *callocData(unsigned char *array, int old_size, int new_size)
 {
-  unsigned char *new = calloc(sizeof(unsigned char), (size_t) new_size);
+  unsigned char *new = calloc(sizeof(unsigned char), (size_t)new_size);
   if(new == NULL)
   {
     return NULL;
   }
-  memcpy(new, array, (size_t) old_size);
+
+  // copy contents into new array
+  memcpy(new, array, (size_t)old_size);
   free(array);
   return new;
 }
 
+//-----------------------------------------------------------------------------
+///
+/// t
+///
+/// @param 
+/// @param 
+/// @param 
+///
+/// @return none
+//
 int checkIfDigits(char *user_input_parameter)
 {
   int counter;
@@ -240,6 +332,16 @@ int checkIfDigits(char *user_input_parameter)
   return 1;
 }
 
+//-----------------------------------------------------------------------------
+///
+/// t
+///
+/// @param 
+/// @param 
+/// @param 
+///
+/// @return none
+//
 int checkIfHex(char *user_input_parameter)
 {
   int counter;
@@ -254,6 +356,16 @@ int checkIfHex(char *user_input_parameter)
   return 1;
 }
 
+//-----------------------------------------------------------------------------
+///
+/// t
+///
+/// @param 
+/// @param 
+/// @param 
+///
+/// @return none
+//
 unsigned char convertToDecimal(char *user_input_parameter)
 {
   const int base = 16; // Base of Hexadecimal Number
@@ -275,11 +387,31 @@ unsigned char convertToDecimal(char *user_input_parameter)
   return decimal_number;
 }
 
+//-----------------------------------------------------------------------------
+///
+/// t
+///
+/// @param 
+/// @param 
+/// @param 
+///
+/// @return none
+//
 void change(int position, unsigned char *data_memory, unsigned char input)
 {
   data_memory[position] = input;
 }
 
+//-----------------------------------------------------------------------------
+///
+/// t
+///
+/// @param 
+/// @param 
+/// @param 
+///
+/// @return none
+//
 void interpret(Node **start_node, unsigned char **data_memory_position,
   unsigned char *data_memory, int *data_memory_size,
     int interactive, int command_count, int step_counter,
@@ -305,10 +437,7 @@ void interpret(Node **start_node, unsigned char **data_memory_position,
 
   while ((*start_node) != NULL)
   {
-    //printf("Current head position is: %d\n", (*start_node)->position);
-    //printf("Step_counter is: %d\n", step_counter);
-
-    // break do while if # steps done
+    // break do while if # of steps done
     if(step_counter == 0)
     {
       return;
@@ -321,7 +450,9 @@ void interpret(Node **start_node, unsigned char **data_memory_position,
         temp_memory = callocData(*data_memory_position, *data_memory_size,
           (*data_memory_size) * 2);
 
+        // set new size of data memory
         *data_memory_size *= 2;
+
         if (temp_memory == NULL)
         {
           printf(errorOutOfMemory);
@@ -367,7 +498,7 @@ void interpret(Node **start_node, unsigned char **data_memory_position,
             putchar(**data_memory_position);
             break;
           case (','):
-            **data_memory_position = (unsigned char) getchar();
+            **data_memory_position = (unsigned char)getchar();
             break;
           case ('['):
             if (**data_memory_position == 0)
@@ -392,6 +523,16 @@ void interpret(Node **start_node, unsigned char **data_memory_position,
   }
 }
 
+//-----------------------------------------------------------------------------
+///
+/// t
+///
+/// @param 
+/// @param 
+/// @param 
+///
+/// @return none
+//
 void setBreak(Node *list, int breakpoint)
 {
   //int counter = 0;
@@ -406,6 +547,16 @@ void setBreak(Node *list, int breakpoint)
   }
 }
 
+//-----------------------------------------------------------------------------
+///
+/// t
+///
+/// @param 
+/// @param 
+/// @param 
+///
+/// @return none
+//
 void freeAllTheMemory(unsigned char **bf_program, unsigned char **data_memory, 
   Node **list, unsigned char **eval_memory, Node **eval_list)
 {
@@ -440,6 +591,16 @@ void freeAllTheMemory(unsigned char **bf_program, unsigned char **data_memory,
   }
 }
 
+//-----------------------------------------------------------------------------
+///
+/// t
+///
+/// @param 
+/// @param 
+/// @param 
+///
+/// @return none
+//
 void inToBinary(unsigned int number, char *binary_value)
 {
   int loop_counter;
@@ -452,6 +613,16 @@ void inToBinary(unsigned int number, char *binary_value)
 
 }
 
+//-----------------------------------------------------------------------------
+///
+/// t
+///
+/// @param 
+/// @param 
+/// @param 
+///
+/// @return none
+//
 int main(int argc, const char *argv[])
 {
   Node *list = NULL;
@@ -728,14 +899,14 @@ int main(int argc, const char *argv[])
         interpret(&eval_list, &data_memory_position, data_memory,
           &data_memory_size, interactive, memory_size, -1,
             &shift_right_counter);
-
-        // free eval instructions
-        freeList(eval_list_head);
-        eval_list_head = NULL;
-
-        free(eval_memory);
-        eval_memory = NULL;
       }
+
+      // free eval instructions
+      freeList(eval_list_head);
+      eval_list_head = NULL;
+
+      free(eval_memory);
+      eval_memory = NULL;
     }
     else if (strcmp(user_input_parameter_one, "eval") == 0)
     {
