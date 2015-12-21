@@ -13,7 +13,7 @@
 // 			    Amel Hamidovic  1330013
 //			    Tina Promitzer  1311885
 //
-// Latest Changes: XX.XX.2015
+// Latest Changes: 21.12.2015
 //-----------------------------------------------------------------------------
 //
 
@@ -294,14 +294,15 @@ void callocBfProgramData(unsigned char **bf_program_data)
 ///
 /// Allocates new memory for data memory.
 ///
-/// @param unsigned char *data_memory.
+/// @param unsigned char *data_memory ptr to the data memory.
 /// @param int old_size current size of the data memory.
 /// @param int new_size new, doubled size of the data memory.
 ///
 /// @return unsigned char *ptr of new data memory if successful.
 /// @return NULL ptr if out of memory.
 //
-unsigned char *callocData(unsigned char *data_memory, int old_size, int new_size)
+unsigned char *callocData(unsigned char *data_memory, int old_size,
+  int new_size)
 {
   unsigned char *new_memory = calloc(sizeof(unsigned char), (size_t)new_size);
   if(new_memory == NULL)
@@ -400,7 +401,7 @@ unsigned char convertToDecimal(char *user_input_parameter)
 ///
 /// @return none.
 //
-void change(int position, unsigned char *data_memory, unsigned char input)
+void change(unsigned char *data_memory, int position, unsigned char input)
 {
   data_memory[position] = input;
 }
@@ -424,9 +425,9 @@ void change(int position, unsigned char *data_memory, unsigned char input)
 /// @return none.
 //
 void interpret(Node **start_node, unsigned char *data_memory,
-               int *data_memory_size, unsigned char **data_memory_position,
-               int *step_right_counter, int command_count, int step_counter,
-               int interactive)
+  int *data_memory_size, unsigned char **data_memory_position,
+    int *step_right_counter, int command_count, int step_counter,
+      int interactive)
 {
   unsigned char *temp_memory; // temporary memory for reallocing data memory
   unsigned int go_right_counter = 0; // counter to check if realloc is needed
@@ -478,6 +479,7 @@ void interpret(Node **start_node, unsigned char *data_memory,
       }
 
       temp_next = (*start_node)->next_;
+
       // checks if current node is a breakpoint
       if (interactive == 1 && (*start_node)->is_break_ == 1)
       {
@@ -732,8 +734,8 @@ int main(int argc, const char *argv[])
       data_memory_position = data_memory;
 
       interpret(&start_node, data_memory, &data_memory_size,
-                &data_memory_position, &step_right_counter, memory_size, -1,
-                interactive);
+        &data_memory_position, &step_right_counter, memory_size, -1,
+          interactive);
 
       //free memory
       freeAllTheMemory(&bf_program, &data_memory, &list, &eval_memory, 
@@ -794,9 +796,11 @@ int main(int argc, const char *argv[])
       freeAllTheMemory(&bf_program, &data_memory, &list, &eval_memory, 
         &eval_list);
       
-      // reset memory
+      // reset memory & values
       callocBfProgramData(&bf_program);
       callocBfProgramData(&data_memory);
+      memory_size = BUFFER_SIZE;
+      step_right_counter = 0;
 
       // load program and parse
       function_error = loadBfProgram(&bf_program, user_input_parameter_two,
@@ -850,8 +854,8 @@ int main(int argc, const char *argv[])
       {
         // run bf prog
         interpret(&start_node, data_memory, &data_memory_size,
-                  &data_memory_position, &step_right_counter, memory_size, -1,
-                  interactive);
+          &data_memory_position, &step_right_counter, memory_size, -1,
+            interactive);
       }
     }
 
@@ -859,74 +863,80 @@ int main(int argc, const char *argv[])
     if (strcmp(user_input_parameter_one, "eval") == 0
       && strcmp(user_input_parameter_two, "default") != 0)
     {
-      // allocate eval instruction memory
-      callocBfProgramData(&eval_memory);
-
-      // check whether program data exists, if no create.
-      if (data_memory == NULL)
+      // check entered bf str length
+      if (strlen(user_input_parameter_two) < 81)
       {
-        callocBfProgramData(&data_memory);
-      }
+        // allocate eval instruction memory
+        callocBfProgramData(&eval_memory);
 
-      // reset values
-      bracket_counter = 0;
-      memory_counter = 0;
-      loop_counter = 0;
-
-      // load eval instructions and parse
-      while (user_input_parameter_two[loop_counter] != '\0')
-      {
-        next_char = user_input_parameter_two[loop_counter];
-
-        function_error = parseAndSaveCharacter(next_char, &memory_size, 
-          &memory_counter, &bracket_counter, &eval_memory);
-        loop_counter++;
-      }
-      if (function_error == 2)
-      {
-        // out of memory error
-        printf(errorOutOfMemory);
-      }
-
-      // count correct number of bf loops
-      if (bracket_counter != 0)
-      {
-        printf(errorParsingFailed);
-      }
-      else
-      {
-        --memory_counter;
-
-        // create list
-        eval_list = createList(memory_counter);
-        if (eval_list == NULL)
+        // check whether program data exists, if no create.
+        if (data_memory == NULL)
         {
-          // free memory
-          freeAllTheMemory(&bf_program, &data_memory, &list, &eval_memory, 
-            &eval_list);
-          exit(2);
+          callocBfProgramData(&data_memory);
         }
 
-        loadList(eval_list, eval_memory, memory_counter);
-        eval_list_head = eval_list;
+        // reset values
+        memory_size = BUFFER_SIZE;
+        bracket_counter = 0;
+        memory_counter = 0;
+        loop_counter = 0;
 
-        if (data_memory_position == NULL)
+
+        // load eval instructions and parse
+        while (user_input_parameter_two[loop_counter] != '\0')
         {
-          data_memory_position = data_memory;
+          next_char = user_input_parameter_two[loop_counter];
+
+          function_error = parseAndSaveCharacter(next_char, &memory_size, 
+            &memory_counter, &bracket_counter, &eval_memory);
+          loop_counter++;
+        }
+        if (function_error == 2)
+        {
+          // out of memory error
+          printf(errorOutOfMemory);
         }
 
-        // run bf prog
-        interpret(&eval_list, data_memory, &data_memory_size,
-                  &data_memory_position, &step_right_counter, memory_size, -1,
-                  interactive);
-      }
+        // count correct number of bf loops
+        if (bracket_counter != 0)
+        {
+          printf(errorParsingFailed);
+        }
+        else
+        {
+          --memory_counter;
 
-      // free eval instructions
-      freeList(eval_list_head);
-      eval_list_head = NULL;
+          // create list
+          eval_list = createList(memory_counter);
+          if (eval_list == NULL)
+          {
+            // free memory
+            freeAllTheMemory(&bf_program, &data_memory, &list, &eval_memory, 
+              &eval_list);
+            exit(2);
+          }
 
-      free(eval_memory);
-      eval_memory = NULL;
+          loadList(eval_list, eval_memory, memory_counter);
+          eval_list_head = eval_list;
+
+          if (data_memory_position == NULL)
+          {
+            data_memory_position = data_memory;
+          }
+
+          // run bf prog
+          interpret(&eval_list, data_memory, &data_memory_size,
+            &data_memory_position, &step_right_counter, memory_size, -1,
+              interactive);
+        }
+
+        // free eval instructions
+        freeList(eval_list_head);
+        eval_list_head = NULL;
+
+        free(eval_memory);
+        eval_memory = NULL;
+      }  
     }
     else if (strcmp(user_input_parameter_one, "eval") == 0)
     {
@@ -981,8 +991,8 @@ int main(int argc, const char *argv[])
         }
 
         interpret(&start_node, data_memory, &data_memory_size,
-                  &data_memory_position, &step_right_counter, memory_size,
-                  step_counter, interactive);
+          &data_memory_position, &step_right_counter, memory_size,
+            step_counter, interactive);
       }
     }
 
@@ -1109,7 +1119,7 @@ int main(int argc, const char *argv[])
           }
         }
 
-        change(memory_id, data_memory, change_input);
+        change(data_memory, memory_id, change_input); 
       }
     }
   }
