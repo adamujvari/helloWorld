@@ -4,7 +4,7 @@
 // brainfuck interpreter
 // 
 // This program is a brainfuck interpreter with debug functionality.
-// The user can run the program in two different modes, interpret only and 
+// The user can run the program in two different modes, interpret only and
 // debug. 
 //
 // Group: 2 - study assistant Angela Promitzer
@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <math.h>
 
 // defines
 #define BUFFER_SIZE 1024
@@ -36,12 +35,12 @@
 // typedef struct
 typedef struct _Node_
 {
-  char character;
-  char is_break;
-  int position;
-  struct _Node_ *next;
-  struct _Node_ *begin;
-  struct _Node_ *end;
+  char character_;
+  char is_break_;
+  int position_;
+  struct _Node_ *next_;
+  struct _Node_ *begin_;
+  struct _Node_ *end_;
 } Node;
 
 //-----------------------------------------------------------------------------
@@ -59,7 +58,7 @@ void freeList(Node *list)
 
   while (current_pos != NULL)
   {
-    next_pos = current_pos->next;
+    next_pos = current_pos->next_;
     free(current_pos);
     current_pos = next_pos;
   }
@@ -84,12 +83,12 @@ Node *createList(int num_of_elements)
     return NULL;
   }
 
-  head->character = 0;
-  head->is_break = 0;
-  head->position = 0;
-  head->next = NULL;
-  head->begin = NULL;
-  head->end = NULL;
+  head->character_ = 0;
+  head->is_break_ = 0;
+  head->position_ = 0;
+  head->next_ = NULL;
+  head->begin_ = NULL;
+  head->end_ = NULL;
 
   Node *current_pos = head;
 
@@ -103,14 +102,14 @@ Node *createList(int num_of_elements)
       return NULL;
     }
 
-    new->character = 0;
-    new->is_break = 0;
-    new->position = counter;
-    new->next = NULL;
-    new->begin = NULL;
-    new->end = NULL;
+    new->character_ = 0;
+    new->is_break_ = 0;
+    new->position_ = counter;
+    new->next_ = NULL;
+    new->begin_ = NULL;
+    new->end_ = NULL;
 
-    current_pos->next = new;
+    current_pos->next_ = new;
     current_pos = new;
   }
 
@@ -136,7 +135,7 @@ void loadList(Node *list, unsigned char *bf_program, int memory_counter)
 
   for (counter = 0; counter <= memory_counter; counter++)
   {
-    list->character = bf_program[counter];
+    list->character_ = bf_program[counter];
     if (bf_program[counter] == '[')
     {
       // save position of loop start
@@ -145,13 +144,13 @@ void loadList(Node *list, unsigned char *bf_program, int memory_counter)
     else if (bf_program[counter] == ']')
     {
       // loop start position
-      list->begin = brackets[--bracket_counter];
+      list->begin_ = brackets[--bracket_counter];
 
       // loop start points to loop end
-      list->begin->end = list;
+      list->begin_->end_ = list;
     }
 
-    list = list->next;
+    list = list->next_;
   }
 }
 
@@ -242,7 +241,7 @@ int loadBfProgram(unsigned char **bf_program, char *bf_prog_name,
     *memory_counter = 0;
 
     // save bf program
-    while ((next_char = fgetc(bf_file_ptr)) != EOF)
+    while ((next_char = (char)fgetc(bf_file_ptr)) != EOF)
     {
       function_error = parseAndSaveCharacter(next_char, memory_size, 
         memory_counter, &bracket_counter, bf_program);
@@ -273,7 +272,7 @@ int loadBfProgram(unsigned char **bf_program, char *bf_prog_name,
 
 //-----------------------------------------------------------------------------
 ///
-/// Takes a doube pointer and allocates the defined size of memory for the bf
+/// Takes a double pointer and allocates the defined size of memory for the bf
 /// instruction memory and zero initializes it.
 ///
 /// @param unsigned char **bf_program_data double ptr to allocate memory for
@@ -295,34 +294,34 @@ void callocBfProgramData(unsigned char **bf_program_data)
 ///
 /// Allocates new memory for data memory.
 ///
-/// @param unsigned char *array.
+/// @param unsigned char *data_memory.
 /// @param int old_size current size of the data memory.
 /// @param int new_size new, doubled size of the data memory.
 ///
-/// @return unsigned char *ptr of new array if successful.
+/// @return unsigned char *ptr of new data memory if successful.
 /// @return NULL ptr if out of memory.
 //
-unsigned char *callocData(unsigned char *array, int old_size, int new_size)
+unsigned char *callocData(unsigned char *data_memory, int old_size, int new_size)
 {
-  unsigned char *new = calloc(sizeof(unsigned char), (size_t)new_size);
-  if(new == NULL)
+  unsigned char *new_memory = calloc(sizeof(unsigned char), (size_t)new_size);
+  if(new_memory == NULL)
   {
     return NULL;
   }
 
   // copy contents into new array
-  memcpy(new, array, (size_t)old_size);
-  free(array);
-  return new;
+  memcpy(new_memory, data_memory, (size_t)old_size);
+  free(data_memory);
+  return new_memory;
 }
 
 //-----------------------------------------------------------------------------
 ///
-/// Checks if user input were true digits only.
+/// Checks if user input were digits only.
 ///
 /// @param char *user_input_parameter ptr to user input.
 ///
-/// @return int 0, false if not digits only.
+/// @return int 0, false if other symbols found.
 /// @return int 1, true if contains only digits.
 //
 int checkIfDigits(char *user_input_parameter)
@@ -411,32 +410,32 @@ void change(int position, unsigned char *data_memory, unsigned char input)
 /// Interprets the brainfuck instructions
 ///
 /// @param Node **start_node double ptr to instruction to be interpreted.
+/// @param unsigned char *data_memory ptr to the head of the data memory.
 /// @param unsigned char **data_memory_position double ptr to current position
 ///        in the data memory.
-/// @param unsigned char *data_memory ptr to the head of the data memory.
 /// @param int *data_memory_size ptr to the size of data memory.
-/// @param int interactive bool that switches interpreting between interactive 
-///        and simple mode.
-/// @param int command_count number of bf instructions.
-/// @param int step_counter number of instructions to be interpreted.
-/// @param int *shift_right_counter ptr to number of right shifts in the data
+/// @param int *step_right_counter ptr to number of right steps in the data
 ///        memory.
+/// @param int command_count overall number of bf instructions.
+/// @param int step_counter number of instructions currently interpreted.
+/// @param int interactive bool that switches interpreting between interactive
+///        and simple mode.
 ///
 /// @return none.
 //
-void interpret(Node **start_node, unsigned char **data_memory_position,
-  unsigned char *data_memory, int *data_memory_size,
-    int interactive, int command_count, int step_counter,
-      int *shift_right_counter)
+void interpret(Node **start_node, unsigned char *data_memory,
+               int *data_memory_size, unsigned char **data_memory_position,
+               int *step_right_counter, int command_count, int step_counter,
+               int interactive)
 {
-  unsigned char *temp_memory;
-  unsigned int go_right = 0;
-  Node *temp_next;
+  unsigned char *temp_memory; // temporary memory for reallocing data memory
+  unsigned int go_right_counter = 0; // counter to check if realloc is needed
+  Node *temp_next; //temporary next node from the program list
 
   // check if no more bf instructions
   if((*start_node) != NULL)
   {
-    if((((*start_node)->position) + step_counter) > command_count)
+    if((((*start_node)->position_) + step_counter) > command_count)
     {
       step_counter = command_count;
     }
@@ -449,7 +448,7 @@ void interpret(Node **start_node, unsigned char **data_memory_position,
 
   while ((*start_node) != NULL)
   {
-    // break do while if # of steps done
+    // break loop if # of steps done
     if(step_counter == 0)
     {
       return;
@@ -457,7 +456,7 @@ void interpret(Node **start_node, unsigned char **data_memory_position,
     else
     {
       // check if data_memory needs to expanded
-      if ((go_right + 1 % BUFFER_SIZE) == 0)
+      if ((go_right_counter + 1 % BUFFER_SIZE) == 0)
       {
         temp_memory = callocData(*data_memory_position, *data_memory_size,
           (*data_memory_size) * 2);
@@ -478,25 +477,26 @@ void interpret(Node **start_node, unsigned char **data_memory_position,
         }
       }
 
-      temp_next = (*start_node)->next;
-      if (interactive == 1 && (*start_node)->is_break == 1)
+      temp_next = (*start_node)->next_;
+      // checks if current node is a breakpoint
+      if (interactive == 1 && (*start_node)->is_break_ == 1)
       {
-        (*start_node)->is_break = 0;
+        (*start_node)->is_break_ = 0;
         return;
       }
       else
       {
-        switch ((*start_node)->character)
+        switch ((*start_node)->character_)
         {
           case ('>'):
-            (*shift_right_counter)++;
-            go_right++;
+            go_right_counter++;
+            (*step_right_counter)++;
             (*data_memory_position)++;
             break;
           case ('<'):
             if ((*data_memory_position) != data_memory)
             {
-              (*shift_right_counter)--;
+              (*step_right_counter)--;
               (*data_memory_position)--;
             }
             break;
@@ -515,13 +515,13 @@ void interpret(Node **start_node, unsigned char **data_memory_position,
           case ('['):
             if (**data_memory_position == 0)
             {
-              temp_next = (*start_node)->end->next;
+              temp_next = (*start_node)->end_->next_;
             }
             break;
           case (']'):
             if (**data_memory_position != 0)
             {
-              temp_next = (*start_node)->begin;
+              temp_next = (*start_node)->begin_;
             }
             break;
           default:
@@ -548,12 +548,12 @@ void setBreak(Node *list, int breakpoint)
 {
   while(list != NULL)
   {
-    if(list->position == breakpoint)
+    if(list->position_ == breakpoint)
     {
-      list->is_break = 1;
+      list->is_break_ = 1;
       return;
     }
-    list = list->next;
+    list = list->next_;
   }
 }
 
@@ -668,7 +668,7 @@ int main(int argc, const char *argv[])
   int function_error = 0;
   int memory_counter = 0;
   int interactive = 0;
-  int shift_right_counter = 0;
+  int step_right_counter = 0;
   int break_point = 0;
   int bracket_counter = 0;
   int memory_id = 0;
@@ -731,9 +731,9 @@ int main(int argc, const char *argv[])
       start_node = list;
       data_memory_position = data_memory;
 
-      interpret(&start_node, &data_memory_position, data_memory,
-        &data_memory_size, interactive, memory_size, -1,
-          &shift_right_counter);
+      interpret(&start_node, data_memory, &data_memory_size,
+                &data_memory_position, &step_right_counter, memory_size, -1,
+                interactive);
 
       //free memory
       freeAllTheMemory(&bf_program, &data_memory, &list, &eval_memory, 
@@ -758,7 +758,7 @@ int main(int argc, const char *argv[])
       break;
     }
 
-    // reset input prameters to default
+    // reset input parameters to default
     strcpy(user_input_parameter_one, "default");
     strcpy(user_input_parameter_two, "default");
     strcpy(user_input_parameter_three, "default");
@@ -804,8 +804,8 @@ int main(int argc, const char *argv[])
       if (function_error == 1)
       {
         // error in readin file: free and reset values
-        // freeAllTheMemory(&bf_program, &data_memory, &list, &eval_memory, 
-        //   &eval_list);
+        freeAllTheMemory(&bf_program, &data_memory, &list, &eval_memory,
+           &eval_list);
         function_error = 0;
       }
       else if (function_error == 2)
@@ -849,9 +849,9 @@ int main(int argc, const char *argv[])
       else
       {
         // run bf prog
-        interpret(&start_node, &data_memory_position, data_memory,
-          &data_memory_size, interactive, memory_size, -1,
-            &shift_right_counter);
+        interpret(&start_node, data_memory, &data_memory_size,
+                  &data_memory_position, &step_right_counter, memory_size, -1,
+                  interactive);
       }
     }
 
@@ -916,9 +916,9 @@ int main(int argc, const char *argv[])
         }
 
         // run bf prog
-        interpret(&eval_list, &data_memory_position, data_memory,
-          &data_memory_size, interactive, memory_size, -1,
-            &shift_right_counter);
+        interpret(&eval_list, data_memory, &data_memory_size,
+                  &data_memory_position, &step_right_counter, memory_size, -1,
+                  interactive);
       }
 
       // free eval instructions
@@ -980,9 +980,9 @@ int main(int argc, const char *argv[])
           }
         }
 
-        interpret(&start_node, &data_memory_position, data_memory,
-          &data_memory_size, interactive, memory_size, step_counter,
-            &shift_right_counter);
+        interpret(&start_node, data_memory, &data_memory_size,
+                  &data_memory_position, &step_right_counter, memory_size,
+                  step_counter, interactive);
       }
     }
 
@@ -998,8 +998,7 @@ int main(int argc, const char *argv[])
       else
       {
         // default values: number = instruction ptr position; type = hex.
-        list_iterator = start_node;
-        memory_id = shift_right_counter;
+        memory_id = step_right_counter;
 
         // check for user input
         if (strcmp(user_input_parameter_two, "default") != 0)
@@ -1068,8 +1067,8 @@ int main(int argc, const char *argv[])
         for (print_counter = 0; print_counter < show_size_counter && 
           list_iterator != NULL; print_counter++)
         {
-          printf("%c", list_iterator->character);
-          list_iterator = list_iterator->next;
+          printf("%c", list_iterator->character_);
+          list_iterator = list_iterator->next_;
         }
 
         printf("\n"); // CHECK: no '\n' if end of instructions
@@ -1088,7 +1087,7 @@ int main(int argc, const char *argv[])
       else
       {
         // set defaults
-        memory_id = shift_right_counter;
+        memory_id = step_right_counter;
         change_input = 0;
 
         // set memory position if present
