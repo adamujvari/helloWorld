@@ -680,6 +680,12 @@ int main(int argc, const char *argv[])
   unsigned int show_size_counter = 0;
   unsigned int step_counter = 0;
 
+  char history[100][100];
+  int history_ctn = 0;
+  for (int i = 0; i < 100; ++i){
+      memset(history[i], 0x00, 100);
+  }
+
 
   // ckeck parameter count for program mode
 	if (argc == 1) // interactive debug mode ------------------------------------
@@ -764,6 +770,10 @@ int main(int argc, const char *argv[])
     strcpy(user_input_parameter_one, "default");
     strcpy(user_input_parameter_two, "default");
     strcpy(user_input_parameter_three, "default");
+    if (strcmp(command, "\n") != 0)
+    {
+      strcpy(history[history_ctn++], command);
+    }
 
     // split user input into parameters
     command_splits = strtok(command, " \n\t");
@@ -1121,6 +1131,22 @@ int main(int argc, const char *argv[])
 
         change(data_memory, memory_id, change_input); 
       }
+    }
+
+    if (strcmp(user_input_parameter_one, "history") == 0)
+    {
+      if (isdigit(user_input_parameter_two[0]))
+      {
+        printf("%s", history[atoi(user_input_parameter_two) - 1]);
+      } 
+      else 
+      {
+        for (int i = 0; i < history_ctn-1; ++i) 
+        {
+          printf("%s", history[i]);
+        }
+      }
+      
     }
   }
 
