@@ -245,6 +245,12 @@ int loadBfProgram(unsigned char **bf_program, char *bf_prog_name,
     {
       function_error = parseAndSaveCharacter(next_char, memory_size, 
         memory_counter, &bracket_counter, bf_program);
+
+      //bracket fix
+      if (bracket_counter < 0) 
+      {
+        break;
+      }
     }
     if (function_error == 2)
     {
