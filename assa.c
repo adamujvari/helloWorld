@@ -1133,7 +1133,7 @@ int main(int argc, const char *argv[])
     {
       printf("Breakpoints:\n");
       Node *n = list;
-      int counter = 0;
+      int counter = 1;
       while (n != NULL){
         if (n->is_break_)
         {
@@ -1147,10 +1147,11 @@ int main(int argc, const char *argv[])
 
       printf("Data memory\n");
       int memory_position = data_memory - data_memory_position;
-      printf("- memory[%d] = %d\n", memory_position, (int)data_memory_position);
+      printf("- memory[%d] = %d\n", memory_position, (char)data_memory_position);
 
       printf("Program size:\n");
-      counter = 0;
+      counter = 1;
+      n = list;
       while (n != NULL){
         counter++;
         n = n->next_;
