@@ -43,6 +43,18 @@ typedef struct _Node_
   struct _Node_ *end_;
 } Node;
 
+//struct used for memory sluts
+typedef struct _slot_
+{
+  Node *head;
+  int data_memory_size;
+  int memory_counter;
+  int step_right_counter;
+  unsigned int memory_size;
+  Node *start_node;
+  unsigned char *data_memory_position;
+} Slot;
+
 //-----------------------------------------------------------------------------
 ///
 /// Free linked list.
@@ -680,6 +692,10 @@ int main(int argc, const char *argv[])
   unsigned int show_size_counter = 0;
   unsigned int step_counter = 0;
 
+  //slots
+  Slot slots[5];
+  memset(slots, 0x00, 5*sizeof(Slot));
+  int slot_num = 0;
 
   // ckeck parameter count for program mode
 	if (argc == 1) // interactive debug mode ------------------------------------
@@ -1122,6 +1138,33 @@ int main(int argc, const char *argv[])
         change(data_memory, memory_id, change_input); 
       }
     }
+
+    if (strcmp(user_input_parameter_one, "usemem") == 0)
+    {
+      //save
+      slots[slot_num].head = list;
+      slots[slot_num].data_memory_size = data_memory_size;
+      slots[slot_num].memory_counter = memory_counter;
+      slots[slot_num].step_right_counter = step_right_counter;
+      slots[slot_num].memory_size = memory_size;
+      slots[slot_num].start_node = start_node;
+      slots[slot_num].data_memory_position = data_memory_position;
+
+      //switch
+      slot_num = atoi(user_input_parameter_two);
+
+      //load
+      list = slots[slot_num].head;
+      data_memory_size = slots[slot_num].data_memory_size;
+      memory_counter = slots[slot_num].memory_counter;
+      step_right_counter = slots[slot_num].step_right_counter;
+      memory_size = slots[slot_num].memory_size;
+      start_node = slots[slot_num].start_node;
+      data_memory_position = slots[slot_num].data_memory_position;
+    }
+
+
+
   }
 
   // prints quit
