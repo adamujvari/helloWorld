@@ -656,7 +656,7 @@ int main(int argc, const char *argv[])
   Node *eval_list_head = NULL;
   Node *list_iterator = NULL;
   Node *start_node = NULL;
-  
+
   char command[BUFFER_SIZE] = "default";
   char bf_file_name[128];
   char *command_splits = "default";
@@ -1128,9 +1128,40 @@ int main(int argc, const char *argv[])
         change(data_memory, memory_id, change_input); 
       }
     }
+
+    if (strcmp(user_input_parameter_one, "info") == 0)
+    {
+      printf("Breakpoints:\n");
+      Node *n = list;
+      int counter = 0;
+      while (n != NULL){
+        if (n->is_break_)
+        {
+          printf("- B%d at %d: %c\n", counter, n->position_, n->character_);
+          counter++;
+        }
+        n = n->next_;
+      }
+      printf("Instruction pointer:\n");
+      printf("- %d: %c\n", start_node->position_, start_node->character_);
+
+      printf("Data memory\n");
+      int memory_position = data_memory - data_memory_position;
+      printf("- memory[%d] = %d\n", memory_position, (int)data_memory_position);
+
+      printf("Program size:\n");
+      counter = 0;
+      while (n != NULL){
+        counter++;
+        n = n->next_;
+      }
+      printf("- %d brainfuck commands\n", counter);
+      printf("Data memory size:\n");
+      printf("- %d Bytes\n", data_memory_size);
+    }
   }
 
-  // prints quit
+  // prints quitƒ
   if (strcmp(command, "quit") == 0)
   {
     printf("Bye.\n");
